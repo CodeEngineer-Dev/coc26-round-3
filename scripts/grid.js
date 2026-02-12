@@ -7,10 +7,12 @@ var [
   GRID_WIDTH,
   GRID_HEIGHT,
 ] = (function () {
-  const WIDTH = 16;
-  const HEIGHT = 16;
+  const WIDTH = 8;
+  const HEIGHT = 8;
 
   /*
+    Comes from https://lodev.org/cgtutor/raycasting.html
+
     Ideas for optimization:
 
     store integers and use bitmap flags for a grid
@@ -40,6 +42,7 @@ var [
       throw new Error("Value not in grid");
     }
   }
+
   function DDA(grid, x, y, angle) {
     angle = angle % (2 * Math.PI);
     if (angle < 0) angle += 2 * Math.PI;
