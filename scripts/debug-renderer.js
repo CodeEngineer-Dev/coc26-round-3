@@ -5,7 +5,7 @@ debugRender takes a list of
 */
 var [debugRender, prepDebugCanvas] = (function () {
   const canvas = document.getElementById("debug");
-  const ctx = debugCanvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
 
   function debugRenderSingle(i) {
     if ("x" in i && "y" in i) {
