@@ -3,12 +3,68 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+      }
+      canvas {
+        outline: 1px solid black;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 600;
+        height: 600;
+      }
+    </style>
   </head>
   <body>
+    <canvas id="render" width="600" height="600"></canvas>
+    <canvas id="overlay" width="600" height="600"></canvas>
     <canvas id="debug" width="600" height="600"></canvas>
+    <script src="scripts/input-handler.js"></script>
     <script src="scripts/debug-renderer.js"></script>
     <script src="scripts/grid.js"></script>
+    <script src="scripts/player.js"></script>
 
-    <script></script>
+    <script>
+      let player = new Player(4, 4);
+      let grid = createGrid();
+
+      for (let i of grid) {
+        if (Math.random() < 0.1) {
+          i.type = "wall";
+          i.isFloor = false;
+        }
+      }
+
+      let displayGrid = grid.map((val, i) => {
+        return {
+          x: getTileLocation(i).x,
+          y: getTileLocation(i).y,
+          w: 1,
+          h: 1,
+          debugFill: val.type == "wall" ? "#FF000080" : "#00000000",
+        };
+      });
+
+      function main() {
+        prepDebugCanvas();
+
+        player.handleUserInput();
+        player.move(grid);
+
+        debugRender(player);
+        debugRender(displayGrid);
+
+        requestAnimationFrame(main);
+      }
+      requestAnimationFrame(main);
+    </script>
   </body>
 </html>
