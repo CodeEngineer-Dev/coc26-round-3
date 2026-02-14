@@ -36,22 +36,21 @@
 
     <script type>
       (function () {
-        let player = new Player(4, 4);
-
+        let player = new Player(8, 8);
         let enemy = new Enemy(
           {
-            movement: { speed: 0.02 },
+            movement: { type: "orbit", speed: 0.05 },
             size: { w: 0.7, h: 0.7, r: 0.35 },
-            engagement: { maxDist: 6, minDist: 2, preferredDist: 4 },
+            engagement: { maxDist: 7, minDist: 3, preferredDist: 5 },
           },
-          { x: 8, y: 8 },
+          { x: 12, y: 12 },
         );
 
         let grid = createGrid();
 
         // spawns walls
         for (let i of grid) {
-          if (Math.random() < 0.02) {
+          if (Math.random() < 0.1) {
             i.type = "wall";
             i.isFloor = false;
           }
