@@ -4,6 +4,7 @@ var [
   setGridTile,
   getTileLocation,
   DDA,
+  handleGridCollision,
   GRID_WIDTH,
   GRID_HEIGHT,
 ] = (function () {
@@ -141,12 +142,68 @@ var [
     }
   }
 
+  function handleGridCollision(grid, entity, direction) {
+    const FLOATING_POINT_MARGIN = 0.001;
+    if (direction == "x") {
+      if (entity.dir.x > 0) {
+        let tileX = Math.floor(entity.pos.x + entity.size.w / 2);
+        let minY = Math.floor(entity.pos.y - entity.size.h / 2);
+        let maxY = Math.floor(entity.pos.y + entity.size.h / 2);
+
+        for (var y = minY; y <= maxY; y++) {
+          if (!getGridTile(grid, tileX, y).isFloor) {
+            entity.pos.x = tileX - entity.size.w / 2 - FLOATING_POINT_MARGIN;
+            break;
+          }
+        }
+      } else if (entity.dir.x < 0) {
+        let tileX = Math.floor(entity.pos.x - entity.size.w / 2);
+        let minY = Math.floor(entity.pos.y - entity.size.h / 2);
+        let maxY = Math.floor(entity.pos.y + entity.size.h / 2);
+
+        for (var y = minY; y <= maxY; y++) {
+          if (!getGridTile(grid, tileX, y).isFloor) {
+            entity.pos.x =
+              tileX + 1 + entity.size.w / 2 + FLOATING_POINT_MARGIN;
+            break;
+          }
+        }
+      }
+    } else if (direction == "y") {
+      if (entity.dir.y > 0) {
+        let tileY = Math.floor(entity.pos.y + entity.size.h / 2);
+        let minX = Math.floor(entity.pos.x - entity.size.w / 2);
+        let maxX = Math.floor(entity.pos.x + entity.size.w / 2);
+
+        for (var x = minX; x <= maxX; x++) {
+          if (!getGridTile(grid, x, tileY).isFloor) {
+            entity.pos.y = tileY - entity.size.h / 2 - FLOATING_POINT_MARGIN;
+            break;
+          }
+        }
+      } else if (entity.dir.y < 0) {
+        let tileY = Math.floor(entity.pos.y - entity.size.h / 2);
+        let minX = Math.floor(entity.pos.x - entity.size.w / 2);
+        let maxX = Math.floor(entity.pos.x + entity.size.w / 2);
+
+        for (var x = minX; x <= maxX; x++) {
+          if (!getGridTile(grid, x, tileY).isFloor) {
+            entity.pos.y =
+              tileY + 1 + entity.size.h / 2 + FLOATING_POINT_MARGIN;
+            break;
+          }
+        }
+      }
+    }
+  }
+
   return [
     createGrid,
     getGridTile,
     setGridTile,
     getTileLocation,
     DDA,
+    handleGridCollision,
     WIDTH,
     HEIGHT,
   ];
