@@ -39,9 +39,9 @@
         let player = new Player(8, 8);
         let enemy = new Enemy(
           {
-            movement: { type: "orbit", speed: 0.05 },
+            movement: { type: "wander", speed: 0.02 },
             size: { w: 0.7, h: 0.7, r: 0.35 },
-            engagement: { maxDist: 7, minDist: 3, preferredDist: 5 },
+            engagement: { maxDist: 5, minDist: 1, preferredDist: 2 },
           },
           { x: 12, y: 12 },
         );
@@ -50,7 +50,7 @@
 
         // spawns walls
         for (let i of grid) {
-          if (Math.random() < 0.1) {
+          if (Math.random() < 0.05) {
             i.type = "wall";
             i.isFloor = false;
           }
@@ -64,7 +64,7 @@
               y: getTileLocation(i).y + 0.5,
             },
             size: { w: 1, h: 1 },
-            debugFill: val.type == "wall" ? "#FF000080" : "#00000000",
+            debugFill: val.type == "wall" ? "#00000080" : "#00000000",
             debugStroke: "#EEEEEE",
           };
         });

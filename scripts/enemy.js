@@ -47,6 +47,7 @@ class MovementHandler {
       h: config.size.h,
       r: config.size.r,
     };
+    this.debugFill = "#FF000080";
 
     this.dir = {
       x: 0,
@@ -81,6 +82,7 @@ class MovementHandler {
     this.dir.y = 0;
   }
 
+  // Used AI to help me work out how to do spirals correctly, esp. w/o using trig or angles.
   blindOrbitToward(pos, distance) {
     const SPIRAL_STRENGTH = 0.5;
 
@@ -110,7 +112,7 @@ class MovementHandler {
   }
   blindOrbitNeutral(pos, distance) {
     let r = distance;
-    console.log(this);
+
     let rx = (pos.x - this.pos.x) / r;
     let ry = (pos.y - this.pos.y) / r;
 
@@ -119,6 +121,24 @@ class MovementHandler {
 
     this.dir.x = px;
     this.dir.y = py;
+  }
+
+  blindWander() {
+    const DIST = 5;
+    const R = 1;
+    let circleX = this.pos.x + this.dir.x * DIST;
+    let circleY = this.pos.y + this.dir.y * DIST;
+
+    let randomTheta = Math.random() * 2 * Math.PI;
+    let randomPointX = circleX + Math.cos(randomTheta) * R;
+    let randomPointY = circleY + Math.sin(randomTheta) * R;
+
+    let dist = this.calculateDistTo({
+      x: randomPointX,
+      y: randomPointY,
+    });
+    this.dir.x = (randomPointX - this.pos.x) / dist;
+    this.dir.y = (randomPointY - this.pos.y) / dist;
   }
 
   handleMovement(grid, dist, playerPos, prefDist, towards, away, neutral) {
@@ -133,8 +153,6 @@ class MovementHandler {
         }
       }
     } else {
-      console.log(playerPos);
-
       neutral(playerPos, dist);
     }
   }
@@ -152,7 +170,7 @@ class MovementHandler {
         grid,
         distToPlayer,
         playerPos,
-        engagement.prefDist,
+        engagement.preferredDist,
         (p, d) => this.blindChaseToward(p, d),
         (p, d) => this.blindChaseAway(p, d),
         (p, d) => this.blindChaseNeutral(p, d),
@@ -165,11 +183,13 @@ class MovementHandler {
         grid,
         distToPlayer,
         playerPos,
-        engagement.prefDist,
+        engagement.preferredDist,
         (p, d) => this.blindOrbitToward(p, d),
         (p, d) => this.blindOrbitAway(p, d),
         (p, d) => this.blindOrbitNeutral(p, d),
       );
+    } else if (this.type == "wander") {
+      this.blindWander();
     }
 
     this.pos.x += this.dir.x * this.speed;
