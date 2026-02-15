@@ -66,15 +66,77 @@ class MovementHandler {
     );
   }
 
-  blindDirToward(pos, distance) {
+  blindChaseToward(pos, distance) {
     let dist = distance || this.calculateDistTo(pos);
     this.dir.x = (pos.x - this.pos.x) / dist;
     this.dir.y = (pos.y - this.pos.y) / dist;
   }
-  blindDirAway(pos, distance) {
+  blindChaseAway(pos, distance) {
     let dist = distance || this.calculateDistTo(pos);
     this.dir.x = -(pos.x - this.pos.x) / dist;
     this.dir.y = -(pos.y - this.pos.y) / dist;
+  }
+  blindChaseNeutral(pos, distance) {
+    this.dir.x = 0;
+    this.dir.y = 0;
+  }
+
+  blindOrbitToward(pos, distance) {
+    const SPIRAL_STRENGTH = 0.5;
+
+    let r = distance;
+    let rx = (pos.x - this.pos.x) / r;
+    let ry = (pos.y - this.pos.y) / r;
+
+    let px = -ry;
+    let py = rx;
+
+    this.dir.x = px + rx * SPIRAL_STRENGTH;
+    this.dir.y = py + ry * SPIRAL_STRENGTH;
+  }
+
+  blindOrbitAway(pos, distance) {
+    const SPIRAL_STRENGTH = 0.5;
+
+    let r = distance;
+    let rx = (pos.x - this.pos.x) / r;
+    let ry = (pos.y - this.pos.y) / r;
+
+    let px = -ry;
+    let py = rx;
+
+    this.dir.x = px - rx * SPIRAL_STRENGTH;
+    this.dir.y = py - ry * SPIRAL_STRENGTH;
+  }
+  blindOrbitNeutral(pos, distance) {
+    let r = distance;
+    console.log(this);
+    let rx = (pos.x - this.pos.x) / r;
+    let ry = (pos.y - this.pos.y) / r;
+
+    let px = -ry;
+    let py = rx;
+
+    this.dir.x = px;
+    this.dir.y = py;
+  }
+
+  handleMovement(grid, dist, playerPos, prefDist, towards, away, neutral) {
+    if (this.isCorrectingRadius) {
+      if (floatsEqual(dist, prefDist, this.speed)) {
+        this.isCorrectingRadius = false;
+      } else {
+        if (dist > prefDist) {
+          towards(playerPos, dist);
+        } else if (dist < prefDist) {
+          away(playerPos, dist);
+        }
+      }
+    } else {
+      console.log(playerPos);
+
+      neutral(playerPos, dist);
+    }
   }
 
   update(grid, playerPos, engagement) {
@@ -86,53 +148,28 @@ class MovementHandler {
       this.isCorrectingRadius = true;
 
     if (this.type == "chase") {
-      if (this.isCorrectingRadius) {
-        if (floatsEqual(distToPlayer, engagement.preferredDist, this.speed)) {
-          this.isCorrectingRadius = false;
-        } else {
-          if (distToPlayer > engagement.preferredDist) {
-            this.blindDirToward(playerPos, distToPlayer);
-          } else if (distToPlayer < engagement.preferredDist) {
-            this.blindDirAway(playerPos, distToPlayer);
-          }
-        }
-      } else {
-        this.dir.x = 0;
-        this.dir.y = 0;
-      }
+      this.handleMovement(
+        grid,
+        distToPlayer,
+        playerPos,
+        engagement.prefDist,
+        (p, d) => this.blindChaseToward(p, d),
+        (p, d) => this.blindChaseAway(p, d),
+        (p, d) => this.blindChaseNeutral(p, d),
+      );
     } else if (this.type == "orbit") {
       // AI helped me work out how to do this correctly and efficiently.
       // Avoids using trig functions and angle calculations. Very nice.
-      let r = distToPlayer;
-      let rx = (playerPos.x - this.pos.x) / r;
-      let ry = (playerPos.y - this.pos.y) / r;
 
-      let px = -ry;
-      let py = rx;
-
-      if (this.isCorrectingRadius) {
-        if (floatsEqual(distToPlayer, engagement.preferredDist, this.speed)) {
-          this.isCorrectingRadius = false;
-        } else {
-          /*
-          const SPIRAL_STRENGTH = 0.5;
-          if (r > engagement.preferredDist) {
-            this.dir.x = px + rx * SPIRAL_STRENGTH;
-            this.dir.y = py + ry * SPIRAL_STRENGTH;
-          } else if (r < engagement.preferredDist) {
-            this.dir.x = px - rx * SPIRAL_STRENGTH;
-            this.dir.y = py - ry * SPIRAL_STRENGTH;
-          }*/
-          if (distToPlayer > engagement.preferredDist) {
-            this.blindDirToward(playerPos, distToPlayer);
-          } else if (distToPlayer < engagement.preferredDist) {
-            this.blindDirAway(playerPos, distToPlayer);
-          }
-        }
-      } else {
-        this.dir.x = px;
-        this.dir.y = py;
-      }
+      this.handleMovement(
+        grid,
+        distToPlayer,
+        playerPos,
+        engagement.prefDist,
+        (p, d) => this.blindOrbitToward(p, d),
+        (p, d) => this.blindOrbitAway(p, d),
+        (p, d) => this.blindOrbitNeutral(p, d),
+      );
     }
 
     this.pos.x += this.dir.x * this.speed;
