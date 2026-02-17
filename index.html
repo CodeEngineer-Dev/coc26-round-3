@@ -36,26 +36,104 @@
 
     <script type>
       (function () {
-        let player = new Player(8, 8);
-        let enemy = new Enemy(
-          {
-            movement: { type: "wander", speed: 0.02 },
-            size: { w: 0.7, h: 0.7, r: 0.35 },
-            engagement: { maxDist: 5, minDist: 1, preferredDist: 2 },
+        /*
+        - attack
+          - type (options: laser, bomb, bullet)
+          - weapon configuration (options: single, shotgun, radial, spiral)
+          - fire pattern (options: constant, burst)
+          - projectile configuration
+              - speed
+              - modifiers (options: pierce, bounce, split, homing, acceleration, slowing)
+              - damage done
+        - timing
+            - telegraph time
+            - cooldown
+            - wind up time
+            - cancelable
+            - recovery
+        */
+        let sampleEnemyConfig = {
+          movement: {
+            type: "orbit",
+            speed: 0.03,
           },
-          { x: 12, y: 12 },
-        );
+          size: {
+            w: 0.7,
+            h: 0.7,
+            r: 0.35,
+          },
+          engagement: {
+            maxDist: 10,
+            minDist: 3,
+            preferredDist: 7,
+            losRequired: true,
+          },
+          attack: {
+            type: "bullet",
+            spatial: {
+              type: "single",
+              number: 1,
+            },
+            firing: {
+              type: "constant",
+              frequency: 300,
+            },
+            projectile: {
+              speed: 0.1,
+              modifiers: "none",
+              damage: 5,
+            },
+            timing: {
+              windup: 240,
+              cooldown: 240,
+            },
+          },
+        };
 
         let grid = createGrid();
 
         // spawns walls
         for (let i of grid) {
           if (Math.random() < 0.05) {
-            i.type = "wall";
-            i.isFloor = false;
+            //i.type = "wall";
+            //i.isFloor = false;
           }
         }
         //*/
+        /*
+        class Projectile {
+          constructor(config, pos, dir) {
+            this.type = config.type;
+            this.prevPos = {
+              x: pos.x,
+              y: pos.y,
+            };
+            this.pos = {
+              x: pos.x,
+              y: pos.y,
+            };
+            this.size = {
+              r: 0.2,
+            };
+            this.direction = {
+              x: dir.x,
+              y: dir.y,
+            };
+            this.speed = config.speed;
+            this.damage = config.damage;
+          }
+          update() {
+            this.prevPos.x = this.pos.x;
+            this.prevPos.y = this.pos.y;
+
+            let velX = this.direction.x * this.speed;
+            let velY = this.direction.y * this.speed;
+
+            this.pos.y += velY;
+            this.pos.x += velX;
+          }
+        }
+        */
 
         let displayGrid = grid.map((val, i) => {
           return {
@@ -69,6 +147,11 @@
           };
         });
 
+        let projectiles = [];
+
+        let player = new Player(16, 16);
+        let enemy = new Enemy(sampleEnemyConfig, { x: 8, y: 8 }, projectiles);
+
         function main() {
           prepDebugCanvas();
 
@@ -77,9 +160,14 @@
 
           enemy.update(grid, player);
 
+          for (let projectile of projectiles) {
+            projectile.update();
+          }
+
           debugRender(displayGrid);
           debugRender(player);
-          debugRender(enemy.movement);
+          debugRender(enemy);
+          debugRender(projectiles);
 
           requestAnimationFrame(main);
         }

@@ -8,20 +8,21 @@ Configuration tree
 - movement
     - type (options: chase, orbit, wander, strafing, move with player)
     - speed
-- pattern 
+- attack 
     - type (options: laser, bomb, bullet)
     - weapon configuration (options: single, shotgun, radial, spiral)
+    - fire pattern (options: constant, burst)
     - projectile configuration
         - speed
         - modifiers (options: pierce, bounce, split, homing, acceleration, slowing)
         - damage done
-- timing
-    - fire pattern (options: constant, burst)
-    - telegraph time
-    - cooldown
-    - wind up time
-    - cancelable
-    - recovery
+  - timing
+      - telegraph time
+      - cooldown
+      - wind up time
+      - cancelable
+      - recovery
+  
 - state based overrides (options: idle, aggressive, retreat; can modify any of it's traits)
 - tag (options: charger, turret, swarm, sniper, summoner, support, splitter, zoner)
 - health
@@ -33,21 +34,48 @@ Configuration tree
 - onDeath (split, explode, spawn, default)
 */
 
+class Projectile {
+  constructor(config, pos, dir) {
+    this.type = config.type;
+    this.prevPos = {
+      x: pos.x,
+      y: pos.y,
+    };
+    this.pos = {
+      x: pos.x,
+      y: pos.y,
+    };
+    this.size = {
+      r: 0.2,
+    };
+    this.direction = {
+      x: dir.x,
+      y: dir.y,
+    };
+    this.speed = config.speed;
+    this.damage = config.damage;
+
+    this.debugFill = "#AAFFAA";
+  }
+  update() {
+    this.prevPos.x = this.pos.x;
+    this.prevPos.y = this.pos.y;
+
+    let velX = this.direction.x * this.speed;
+    let velY = this.direction.y * this.speed;
+
+    this.pos.y += velY;
+    this.pos.x += velX;
+  }
+}
+
 class MovementHandler {
-  constructor(config, position) {
+  constructor(config, position, size) {
     this.type = config.movement.type;
     this.speed = config.movement.speed;
 
-    this.pos = {
-      x: position.x,
-      y: position.y,
-    };
-    this.size = {
-      w: config.size.w,
-      h: config.size.h,
-      r: config.size.r,
-    };
-    this.debugFill = "#FF000080";
+    this.pos = position;
+    this.size = size;
 
     this.dir = {
       x: 0,
@@ -199,13 +227,138 @@ class MovementHandler {
     handleGridCollision(grid, this, "y");
   }
 }
+class AttackHandler {
+  constructor(config, position, projectileArrayRef) {
+    // Weapon configuration
+    this.type = config.attack.type;
+    this.spatial = structuredClone(config.attack.spatial);
+    this.firing = structuredClone(config.attack.firing);
+    this.projectile = structuredClone(config.attack.projectile);
+    this.timing = structuredClone(config.attack.timing);
 
+    // Weapon states: ready, windup, fire, cooldown
+    this.currentState = "ready";
+
+    // Timer for the next state
+    this.timer = 0;
+
+    // Current weapon release position
+    this.pos = position;
+
+    this.projectileArrayRef = projectileArrayRef;
+  }
+  tryAttack() {
+    if (this.currentState == "ready") {
+      this.currentState = "windup";
+      this.timer = this.timing.windup;
+      return true;
+    } else {
+      return false;
+    }
+  }
+  fire(grid, playerPos) {
+    let distToPlayer = Math.sqrt(
+      (playerPos.x - this.pos.x) * (playerPos.x - this.pos.x) +
+        (playerPos.y - this.pos.y) * (playerPos.y - this.pos.y),
+    );
+
+    this.projectileArrayRef.push(
+      new Projectile(
+        this.projectile,
+        {
+          x: this.pos.x,
+          y: this.pos.y,
+        },
+        {
+          x: (playerPos.x - this.pos.x) / distToPlayer,
+          y: (playerPos.y - this.pos.y) / distToPlayer,
+        },
+      ),
+    );
+  }
+  update(grid, playerPos) {
+    if (this.currentState == "windup") {
+      if (this.timer <= 0) {
+        this.currentState = "fire";
+      }
+    } else if (this.currentState == "fire") {
+      this.fire(grid, playerPos);
+      this.currentState = "cooldown";
+      this.timer = this.timing.cooldown;
+    } else if (this.currentState == "cooldown") {
+      if (this.timer <= 0) {
+        this.currentState = "ready";
+      }
+    }
+
+    this.timer--;
+  }
+}
+/*
+let sampleEnemyConfig = {
+          movement: {
+            type: "orbit",
+            speed: 0.03,
+          },
+          size: {
+            w: 0.7,
+            h: 0.7,
+            r: 0.35,
+          },
+          engagement: {
+            maxDist: 10,
+            minDist: 3,
+            preferredDist: 7,
+            losRequired: true,
+          },
+          attack: {
+            type: "bullet",
+            spatial: {
+              type: "single",
+              number: 1,
+            },
+            firing: {
+              type: "constant",
+              frequency: 300,
+            },
+            projectile: {
+              speed: 0.1,
+              modifiers: "none",
+              damage: 5,
+            },
+            timing: {
+              windup: 240,
+              cooldown: 240,
+            },
+          },
+        };
+
+*/
 class Enemy {
-  constructor(config, position) {
-    this.movement = new MovementHandler(config, position);
+  constructor(config, position, projectileArray) {
+    this.pos = {
+      x: position.x,
+      y: position.y,
+    };
+    this.size = {
+      w: config.size.w,
+      h: config.size.h,
+      r: config.size.r,
+    };
+    this.movement = new MovementHandler(config, this.pos, this.size);
+    this.firing = structuredClone(config.attack.firing);
     this.engagement = structuredClone(config.engagement);
+
+    this.attack = new AttackHandler(config, this.pos, projectileArray);
+
+    this.projectileArrayRef = projectileArray;
+
+    this.debugFill = "#FF000080";
   }
   update(grid, player) {
     this.movement.update(grid, player.pos, this.engagement);
+    this.attack.update(grid, player.pos);
+
+    this.attack.tryAttack();
   }
 }
