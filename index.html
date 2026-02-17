@@ -63,40 +63,6 @@
           }
         }
         //*/
-        /*
-        class Projectile {
-          constructor(config, pos, dir) {
-            this.type = config.type;
-            this.prevPos = {
-              x: pos.x,
-              y: pos.y,
-            };
-            this.pos = {
-              x: pos.x,
-              y: pos.y,
-            };
-            this.size = {
-              r: 0.2,
-            };
-            this.direction = {
-              x: dir.x,
-              y: dir.y,
-            };
-            this.speed = config.speed;
-            this.damage = config.damage;
-          }
-          update() {
-            this.prevPos.x = this.pos.x;
-            this.prevPos.y = this.pos.y;
-
-            let velX = this.direction.x * this.speed;
-            let velY = this.direction.y * this.speed;
-
-            this.pos.y += velY;
-            this.pos.x += velX;
-          }
-        }
-        */
 
         let displayGrid = grid.map((val, i) => {
           return {
@@ -130,15 +96,17 @@
           attack: {
             type: "bullet",
             spatial: {
-              type: "shotgun",
-              number: 10,
+              type: "radial",
+              number: 12,
               aimed: true,
-              spiralPause: 10,
+              spiralPause: 0,
               shotgunAngleRange: Math.PI / 4,
             },
             firing: {
               type: "constant",
-              frequency: 300,
+              frequency: 20,
+              burstNumber: 5,
+              burstPause: 30,
             },
             projectile: {
               speed: 0.1,

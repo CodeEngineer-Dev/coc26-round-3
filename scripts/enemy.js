@@ -1,41 +1,5 @@
-/*
-
-Enemies will have different patterns specified by JSON.
-
-Configuration tree
-- position
-- size
-- movement
-    - type (options: chase, orbit, wander, strafing, move with player)
-    - speed
-- attack 
-    - type (options: laser, bomb, bullet)
-    - weapon configuration (options: single, shotgun, radial, spiral)
-    - fire pattern (options: constant, burst)
-    - projectile configuration
-        - speed
-        - modifiers (options: pierce, bounce, split, homing, acceleration, slowing)
-        - damage done
-  - timing
-      - telegraph time
-      - cooldown
-      - wind up time
-      - cancelable
-      - recovery
-  
-- state based overrides (options: idle, aggressive, retreat; can modify any of it's traits)
-- tag (options: charger, turret, swarm, sniper, summoner, support, splitter, zoner)
-- health
-- engagement rules
-    - LOS
-    - minDist
-    - maxDist
-    - prefDist
-- onDeath (split, explode, spawn, default)
-*/
-
 class Projectile {
-  constructor(config, pos, dir) {
+  constructor(config, type, pos, dir) {
     this.type = config.type;
     this.prevPos = {
       x: pos.x,
@@ -54,18 +18,21 @@ class Projectile {
     };
     this.speed = config.speed;
     this.damage = config.damage;
+    this.type = type;
 
     this.debugFill = "#AAFFAA";
   }
   update() {
-    this.prevPos.x = this.pos.x;
-    this.prevPos.y = this.pos.y;
+    if (this.type == "bullet") {
+      this.prevPos.x = this.pos.x;
+      this.prevPos.y = this.pos.y;
 
-    let velX = this.direction.x * this.speed;
-    let velY = this.direction.y * this.speed;
+      let velX = this.direction.x * this.speed;
+      let velY = this.direction.y * this.speed;
 
-    this.pos.y += velY;
-    this.pos.x += velX;
+      this.pos.y += velY;
+      this.pos.x += velX;
+    }
   }
 }
 
@@ -269,6 +236,7 @@ class AttackHandler {
       this.projectileArrayRef.push(
         new Projectile(
           this.projectile,
+          this.type,
           {
             x: this.pos.x,
             y: this.pos.y,
@@ -295,6 +263,7 @@ class AttackHandler {
         this.projectileArrayRef.push(
           new Projectile(
             this.projectile,
+            this.type,
             {
               x: this.pos.x,
               y: this.pos.y,
@@ -323,6 +292,7 @@ class AttackHandler {
           this.projectileArrayRef.push(
             new Projectile(
               this.projectile,
+              this.type,
               {
                 x: this.pos.x,
                 y: this.pos.y,
@@ -362,6 +332,7 @@ class AttackHandler {
         this.projectileArrayRef.push(
           new Projectile(
             this.projectile,
+            this.type,
             {
               x: this.pos.x,
               y: this.pos.y,
@@ -440,6 +411,41 @@ let sampleEnemyConfig = {
         };
 
 */
+/*
+
+Enemies will have different patterns specified by JSON.
+
+Configuration tree
+- position
+- size
+- movement
+    - type (options: chase, orbit, wander, strafing, move with player)
+    - speed
+- attack 
+    - type (options: laser, bomb, bullet)
+    - weapon configuration (options: single, shotgun, radial, spiral)
+    - fire pattern (options: constant, burst)
+    - projectile configuration
+        - speed
+        - modifiers (options: pierce, bounce, split, homing, acceleration, slowing)
+        - damage done
+  - timing
+      - telegraph time
+      - cooldown
+      - wind up time
+      - cancelable
+      - recovery
+  
+- state based overrides (options: idle, aggressive, retreat; can modify any of it's traits)
+- tag (options: charger, turret, swarm, sniper, summoner, support, splitter, zoner)
+- health
+- engagement rules
+    - LOS
+    - minDist
+    - maxDist
+    - prefDist
+- onDeath (split, explode, spawn, default)
+*/
 class Enemy {
   constructor(config, position, projectileArray) {
     this.pos = {
@@ -456,15 +462,37 @@ class Enemy {
     this.engagement = structuredClone(config.engagement);
 
     this.attack = new AttackHandler(config, this.pos, projectileArray);
+    this.backupTiming = structuredClone(config.attack.timing);
 
     this.projectileArrayRef = projectileArray;
 
     this.debugFill = "#FF000080";
+
+    this.attackTimer = 0;
+    this.shotsThisRound = 0;
+    this.burstTimer = 0;
   }
   update(grid, player) {
     this.movement.update(grid, player.pos, this.engagement);
     this.attack.update(grid, player.pos);
 
-    this.attack.tryAttack();
+    if (this.attackTimer <= 0) {
+      if (this.firing.type == "constant") {
+        if (this.attack.tryAttack()) this.attackTimer = this.firing.frequency;
+      } else if (this.firing.type == "burst") {
+        if (this.shotsThisRound < this.firing.burstNumber) {
+          if (this.attack.tryAttack()) {
+            this.shotsThisRound++;
+            this.attack.timing.windup = 0;
+            this.attack.timing.cooldown = this.firing.burstPause;
+          }
+        } else {
+          this.attackTimer = this.firing.frequency;
+          this.shotsThisRound = 0;
+        }
+      }
+    } else {
+      this.attackTimer--;
+    }
   }
 }
