@@ -372,41 +372,6 @@ class AttackHandler {
   }
 }
 
-/*
-
-Enemies will have different patterns specified by JSON.
-
-Configuration tree
-- position
-- size
-- movement
-    - type (options: chase, orbit, wander, strafing, move with player)
-    - speed
-- attack 
-    - type (options: laser, bomb, bullet)
-    - weapon configuration (options: single, shotgun, radial, spiral)
-    - fire pattern (options: constant, burst)
-    - projectile configuration
-        - speed
-        - modifiers (options: pierce, bounce, split, homing, acceleration, slowing)
-        - damage done
-  - timing
-      - telegraph time
-      - cooldown
-      - wind up time
-      - cancelable
-      - recovery
-  
-- state based overrides (options: idle, aggressive, retreat; can modify any of it's traits)
-- tag (options: charger, turret, swarm, sniper, summoner, support, splitter, zoner)
-- health
-- engagement rules
-    - LOS
-    - minDist
-    - maxDist
-    - prefDist
-- onDeath (split, explode, spawn, default)
-*/
 class Enemy {
   constructor(config, position, projectileArray) {
     this.pos = {
