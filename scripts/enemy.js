@@ -351,6 +351,37 @@ class AttackHandler {
       } else {
         this.spiralPauseTimer--;
       }
+    } else if (this.spatial.type == "shotgun") {
+      let angleTo = 0;
+      angleTo =
+        Math.atan2(playerPos.y - this.pos.y, playerPos.x - this.pos.x) -
+        this.spatial.shotgunAngleRange / 2 +
+        this.spatial.shotgunAngleRange / (2 * this.spatial.number);
+
+      for (let i = 0; i < this.spatial.number; i++) {
+        this.projectileArrayRef.push(
+          new Projectile(
+            this.projectile,
+            {
+              x: this.pos.x,
+              y: this.pos.y,
+            },
+            {
+              x: Math.cos(
+                angleTo +
+                  i * (this.spatial.shotgunAngleRange / this.spatial.number),
+              ),
+              y: Math.sin(
+                angleTo +
+                  i * (this.spatial.shotgunAngleRange / this.spatial.number),
+              ),
+            },
+          ),
+        );
+      }
+
+      this.currentState = "cooldown";
+      this.timer = this.timing.cooldown;
     }
   }
   update(grid, playerPos) {
