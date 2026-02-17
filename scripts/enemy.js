@@ -473,6 +473,11 @@ class Enemy {
     this.burstTimer = 0;
   }
   update(grid, player) {
+    if (this.attack.currentState == "windup") this.debugFill = "#0000AA80";
+    else if (this.attack.currentState == "cooldown")
+      this.debugFill = "#00AA0080";
+    else this.debugFill = "#FF000080";
+
     this.movement.update(grid, player.pos, this.engagement);
     this.attack.update(grid, player.pos);
 
@@ -489,6 +494,7 @@ class Enemy {
         } else {
           this.attackTimer = this.firing.frequency;
           this.shotsThisRound = 0;
+          this.attack.timing.windup = this.backupTiming.windup;
         }
       }
     } else {

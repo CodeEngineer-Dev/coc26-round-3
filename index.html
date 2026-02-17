@@ -88,24 +88,24 @@
             r: 0.35,
           },
           engagement: {
-            maxDist: 10,
-            minDist: 3,
-            preferredDist: 7,
+            maxDist: 15,
+            minDist: 5,
+            preferredDist: 10,
             losRequired: true,
           },
           attack: {
             type: "bullet",
             spatial: {
-              type: "radial",
-              number: 12,
-              aimed: true,
-              spiralPause: 0,
+              type: "spiral",
+              number: 15,
+              aimed: false,
+              spiralPause: 5,
               shotgunAngleRange: Math.PI / 4,
             },
             firing: {
-              type: "constant",
-              frequency: 20,
-              burstNumber: 5,
+              type: "burst",
+              frequency: 300,
+              burstNumber: 3,
               burstPause: 30,
             },
             projectile: {
@@ -114,7 +114,7 @@
               damage: 5,
             },
             timing: {
-              windup: 30,
+              windup: 60,
               cooldown: 30,
             },
           },
