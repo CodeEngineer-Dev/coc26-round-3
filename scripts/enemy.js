@@ -246,6 +246,9 @@ class AttackHandler {
     this.pos = position;
 
     this.projectileArrayRef = projectileArrayRef;
+
+    this.spiralPauseTimer = 0;
+    this.spiralNumber = 0;
   }
   tryAttack() {
     if (this.currentState == "ready") {
@@ -257,24 +260,98 @@ class AttackHandler {
     }
   }
   fire(grid, playerPos) {
-    let distToPlayer = Math.sqrt(
-      (playerPos.x - this.pos.x) * (playerPos.x - this.pos.x) +
-        (playerPos.y - this.pos.y) * (playerPos.y - this.pos.y),
-    );
+    if (this.spatial.type == "single") {
+      let distToPlayer = Math.sqrt(
+        (playerPos.x - this.pos.x) * (playerPos.x - this.pos.x) +
+          (playerPos.y - this.pos.y) * (playerPos.y - this.pos.y),
+      );
 
-    this.projectileArrayRef.push(
-      new Projectile(
-        this.projectile,
-        {
-          x: this.pos.x,
-          y: this.pos.y,
-        },
-        {
-          x: (playerPos.x - this.pos.x) / distToPlayer,
-          y: (playerPos.y - this.pos.y) / distToPlayer,
-        },
-      ),
-    );
+      this.projectileArrayRef.push(
+        new Projectile(
+          this.projectile,
+          {
+            x: this.pos.x,
+            y: this.pos.y,
+          },
+          {
+            x: (playerPos.x - this.pos.x) / distToPlayer,
+            y: (playerPos.y - this.pos.y) / distToPlayer,
+          },
+        ),
+      );
+
+      this.currentState = "cooldown";
+      this.timer = this.timing.cooldown;
+    } else if (this.spatial.type == "radial") {
+      let angleTo = 0;
+      if (this.spatial.aimed) {
+        angleTo = Math.atan2(
+          playerPos.y - this.pos.y,
+          playerPos.x - this.pos.x,
+        );
+      }
+
+      for (let i = 0; i < this.spatial.number; i++) {
+        this.projectileArrayRef.push(
+          new Projectile(
+            this.projectile,
+            {
+              x: this.pos.x,
+              y: this.pos.y,
+            },
+            {
+              x: Math.cos(angleTo + i * ((2 * Math.PI) / this.spatial.number)),
+              y: Math.sin(angleTo + i * ((2 * Math.PI) / this.spatial.number)),
+            },
+          ),
+        );
+      }
+
+      this.currentState = "cooldown";
+      this.timer = this.timing.cooldown;
+    } else if (this.spatial.type == "spiral") {
+      if (this.spiralPauseTimer <= 0) {
+        let angleTo = 0;
+        if (this.spatial.aimed) {
+          angleTo = Math.atan2(
+            playerPos.y - this.pos.y,
+            playerPos.x - this.pos.x,
+          );
+        }
+
+        if (this.spiralNumber < this.spatial.number) {
+          this.projectileArrayRef.push(
+            new Projectile(
+              this.projectile,
+              {
+                x: this.pos.x,
+                y: this.pos.y,
+              },
+              {
+                x: Math.cos(
+                  angleTo +
+                    this.spiralNumber * ((2 * Math.PI) / this.spatial.number),
+                ),
+                y: Math.sin(
+                  angleTo +
+                    this.spiralNumber * ((2 * Math.PI) / this.spatial.number),
+                ),
+              },
+            ),
+          );
+
+          this.spiralNumber++;
+          this.spiralPauseTimer = this.spatial.spiralPause;
+        } else {
+          this.currentState = "cooldown";
+          this.timer = this.timing.cooldown;
+          this.spiralPauseTimer = 0;
+          this.spiralNumber = 0;
+        }
+      } else {
+        this.spiralPauseTimer--;
+      }
+    }
   }
   update(grid, playerPos) {
     if (this.currentState == "windup") {
@@ -283,8 +360,6 @@ class AttackHandler {
       }
     } else if (this.currentState == "fire") {
       this.fire(grid, playerPos);
-      this.currentState = "cooldown";
-      this.timer = this.timing.cooldown;
     } else if (this.currentState == "cooldown") {
       if (this.timer <= 0) {
         this.currentState = "ready";

@@ -52,43 +52,6 @@
             - cancelable
             - recovery
         */
-        let sampleEnemyConfig = {
-          movement: {
-            type: "orbit",
-            speed: 0.03,
-          },
-          size: {
-            w: 0.7,
-            h: 0.7,
-            r: 0.35,
-          },
-          engagement: {
-            maxDist: 10,
-            minDist: 3,
-            preferredDist: 7,
-            losRequired: true,
-          },
-          attack: {
-            type: "bullet",
-            spatial: {
-              type: "single",
-              number: 1,
-            },
-            firing: {
-              type: "constant",
-              frequency: 300,
-            },
-            projectile: {
-              speed: 0.1,
-              modifiers: "none",
-              damage: 5,
-            },
-            timing: {
-              windup: 240,
-              cooldown: 240,
-            },
-          },
-        };
 
         let grid = createGrid();
 
@@ -148,6 +111,45 @@
         });
 
         let projectiles = [];
+        let sampleEnemyConfig = {
+          movement: {
+            type: "chase",
+            speed: 0.03,
+          },
+          size: {
+            w: 0.7,
+            h: 0.7,
+            r: 0.35,
+          },
+          engagement: {
+            maxDist: 10,
+            minDist: 3,
+            preferredDist: 7,
+            losRequired: true,
+          },
+          attack: {
+            type: "bullet",
+            spatial: {
+              type: "spiral",
+              number: 12,
+              aimed: true,
+              spiralPause: 10,
+            },
+            firing: {
+              type: "constant",
+              frequency: 300,
+            },
+            projectile: {
+              speed: 0.1,
+              modifiers: "none",
+              damage: 5,
+            },
+            timing: {
+              windup: 30,
+              cooldown: 30,
+            },
+          },
+        };
 
         let player = new Player(16, 16);
         let enemy = new Enemy(sampleEnemyConfig, { x: 8, y: 8 }, projectiles);
