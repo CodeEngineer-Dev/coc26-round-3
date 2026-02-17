@@ -371,46 +371,7 @@ class AttackHandler {
     this.timer--;
   }
 }
-/*
-let sampleEnemyConfig = {
-          movement: {
-            type: "orbit",
-            speed: 0.03,
-          },
-          size: {
-            w: 0.7,
-            h: 0.7,
-            r: 0.35,
-          },
-          engagement: {
-            maxDist: 10,
-            minDist: 3,
-            preferredDist: 7,
-            losRequired: true,
-          },
-          attack: {
-            type: "bullet",
-            spatial: {
-              type: "single",
-              number: 1,
-            },
-            firing: {
-              type: "constant",
-              frequency: 300,
-            },
-            projectile: {
-              speed: 0.1,
-              modifiers: "none",
-              damage: 5,
-            },
-            timing: {
-              windup: 240,
-              cooldown: 240,
-            },
-          },
-        };
 
-*/
 /*
 
 Enemies will have different patterns specified by JSON.

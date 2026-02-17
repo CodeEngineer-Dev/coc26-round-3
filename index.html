@@ -36,23 +36,6 @@
 
     <script type>
       (function () {
-        /*
-        - attack
-          - type (options: laser, bomb, bullet)
-          - weapon configuration (options: single, shotgun, radial, spiral)
-          - fire pattern (options: constant, burst)
-          - projectile configuration
-              - speed
-              - modifiers (options: pierce, bounce, split, homing, acceleration, slowing)
-              - damage done
-        - timing
-            - telegraph time
-            - cooldown
-            - wind up time
-            - cancelable
-            - recovery
-        */
-
         let grid = createGrid();
 
         // spawns walls
@@ -77,6 +60,54 @@
         });
 
         let projectiles = [];
+
+        /*
+          Configuration options for an enemy:
+
+          {
+            movement: {
+              type: "chase" | "orbit" | "wander",
+              speed: number
+            },
+            size: {
+              w: number,
+              h: number,
+              r: number
+            },
+            engagement: {
+              maxDist: number,
+              minDist: number,
+              preferredDist: number,
+            },
+            attack: {
+              type: "bullet",
+              spatial: {
+                type: "single" | "shotgun" | "radial" | "spiral",
+                number: number,
+                aimed: boolean,
+                spiralPause: number,
+                shotgunAngleRange: number
+              },
+              firing: {
+                type: "constant" | "burst",
+                frequency: number,
+                burstNumber: number,
+                burstPause: number,
+              },
+              projectile: {
+                speed: number,
+                modifiers: "none" | "bounce" | "split" | "pierce",
+                damage: number
+              },
+              timing: {
+                windup: number,
+                cooldown: number
+              }
+            },
+            tag: string,
+            health: number
+          }
+        */
         let sampleEnemyConfig = {
           movement: {
             type: "chase",
@@ -91,7 +122,6 @@
             maxDist: 15,
             minDist: 5,
             preferredDist: 10,
-            losRequired: true,
           },
           attack: {
             type: "bullet",
@@ -117,6 +147,7 @@
               windup: 60,
               cooldown: 30,
             },
+            tag: "string",
           },
         };
 
