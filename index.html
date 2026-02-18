@@ -31,6 +31,7 @@
     <script type src="scripts/input-handler.js"></script>
     <script type src="scripts/debug-renderer.js"></script>
     <script type src="scripts/grid.js"></script>
+    <script type src="scripts/attack.js"></script>
     <script type src="scripts/player.js"></script>
     <script type src="scripts/enemy.js"></script>
 
@@ -59,7 +60,8 @@
           };
         });
 
-        let projectiles = [];
+        let enemyProjectiles = [];
+        let playerProjectiles = [];
 
         /*
           Configuration options for an enemy:
@@ -150,26 +152,70 @@
             tag: "string",
           },
         };
+        let samplePlayerConfig = {
+          attack: {
+            type: "bullet",
+            spatial: {
+              type: "shotgun",
+              number: 6,
+              aimed: true,
+              spiralPause: 0,
+              shotgunAngleRange: Math.PI / 4,
+            },
+            firing: {
+              type: "burst",
+              frequency: 240,
+              burstNumber: 3,
+              burstPause: 30,
+            },
+            projectile: {
+              speed: 0.1,
+              modifiers: "none",
+              damage: 20,
+            },
+            timing: {
+              windup: 0,
+              cooldown: 0,
+            },
+          },
+        };
 
-        let player = new Player(16, 16);
-        let enemy = new Enemy(sampleEnemyConfig, { x: 8, y: 8 }, projectiles);
+        let player = new Player(
+          samplePlayerConfig,
+          { x: 16, y: 16 },
+          playerProjectiles,
+        );
+
+        let enemies = [];
+        enemies.push(
+          new Enemy(sampleEnemyConfig, { x: 8, y: 8 }, enemyProjectiles),
+        );
+        enemies.push(
+          new Enemy(sampleEnemyConfig, { x: 24, y: 24 }, enemyProjectiles),
+        );
 
         function main() {
           prepDebugCanvas();
 
           player.handleUserInput();
-          player.move(grid);
+          player.update(grid, enemies);
 
-          enemy.update(grid, player);
+          for (let enemy of enemies) {
+            enemy.update(grid, player);
+          }
 
-          for (let projectile of projectiles) {
+          for (let projectile of enemyProjectiles) {
+            projectile.update();
+          }
+          for (let projectile of playerProjectiles) {
             projectile.update();
           }
 
           debugRender(displayGrid);
           debugRender(player);
-          debugRender(enemy);
-          debugRender(projectiles);
+          debugRender(enemies);
+          debugRender(enemyProjectiles);
+          debugRender(playerProjectiles);
 
           requestAnimationFrame(main);
         }

@@ -1,15 +1,57 @@
 var Player = (function () {
+  /*
+          Configuration options for an player:
+
+          {
+            attack: {
+              type: "bullet",
+              spatial: {
+                type: "single" | "shotgun" | "radial",
+                number: number,
+                aimed: boolean,
+                spiralPause: number,
+                shotgunAngleRange: number
+              },
+              firing: {
+                type: "constant" | "burst",
+                frequency: number,
+                burstNumber: number,
+                burstPause: number,
+              },
+              projectile: {
+                speed: number,
+                modifiers: "none" | "bounce" | "split" | "pierce",
+                damage: number
+              },
+              timing: {
+                windup: number,
+                cooldown: number
+              }
+            },
+          }
+        */
   class Player {
-    constructor(x, y) {
+    constructor(config, position, projectileArray) {
       this.pos = {
-        x: x,
-        y: y,
+        x: position.x,
+        y: position.y,
       };
       this.size = {
         w: 0.8,
         h: 0.8,
         r: 0.4,
       };
+
+      this.firing = structuredClone(config.attack.firing);
+
+      this.attack = new AttackHandler(config, this.pos, projectileArray);
+      this.backupTiming = structuredClone(config.attack.timing);
+
+      this.projectileArrayRef = projectileArray;
+
+      this.attackTimer = 0;
+      this.shotsThisRound = 0;
+      this.burstTimer = 0;
 
       this.speed = 0.05;
       this.dir = { x: 0, y: 0 };
@@ -18,11 +60,18 @@ var Player = (function () {
       this.dir.x = 0;
       this.dir.y = 0;
 
-      if (events.KeyW) this.dir.y += -1;
-      if (events.KeyS) this.dir.y += 1;
-
-      if (events.KeyA) this.dir.x += -1;
-      if (events.KeyD) this.dir.x += 1;
+      if (events.KeyW) {
+        this.dir.y = -1;
+      }
+      if (events.KeyS) {
+        this.dir.y = 1;
+      }
+      if (events.KeyA) {
+        this.dir.x = -1;
+      }
+      if (events.KeyD) {
+        this.dir.x = 1;
+      }
     }
     move(grid) {
       if (this.dir.x != 0 && this.dir.y != 0) {
@@ -38,6 +87,48 @@ var Player = (function () {
 
       this.centerX = this.pos.x + this.size.w / 2;
       this.centerY = this.pos.y + this.size.h / 2;
+    }
+    update(grid, enemies) {
+      let closestEnemyPos = { x: 0, y: 0 };
+      let closestEnemyDistSq = Infinity;
+      if (enemies.length > 0) {
+        for (let enemy of enemies) {
+          let enemyDistSq =
+            (enemy.pos.x - this.pos.x) * (enemy.pos.x - this.pos.x) +
+            (enemy.pos.y - this.pos.y) * (enemy.pos.y - this.pos.y);
+          if (enemyDistSq < closestEnemyDistSq) {
+            closestEnemyPos = enemy.pos;
+            closestEnemyDistSq = enemyDistSq;
+          }
+        }
+      } else {
+        closestEnemyPos.x = this.pos.x + Math.random() - 0.5;
+        closestEnemyPos.y = this.pos.y + Math.random() - 0.5;
+      }
+
+      this.move(grid);
+
+      this.attack.update(grid, closestEnemyPos);
+
+      if (this.attackTimer <= 0) {
+        if (this.firing.type == "constant") {
+          if (this.attack.tryAttack()) this.attackTimer = this.firing.frequency;
+        } else if (this.firing.type == "burst") {
+          if (this.shotsThisRound < this.firing.burstNumber) {
+            if (this.attack.tryAttack()) {
+              this.shotsThisRound++;
+              this.attack.timing.windup = 0;
+              this.attack.timing.cooldown = this.firing.burstPause;
+            }
+          } else {
+            this.attackTimer = this.firing.frequency;
+            this.shotsThisRound = 0;
+            this.attack.timing.windup = this.backupTiming.windup;
+          }
+        }
+      } else {
+        this.attackTimer--;
+      }
     }
   }
 
