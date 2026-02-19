@@ -176,6 +176,7 @@ class Enemy {
     this.backupTiming = structuredClone(config.attack.timing);
 
     this.projectileArrayRef = projectileArray;
+    this.health = config.health;
 
     this.debugFill = "#FF000080";
 

@@ -5,6 +5,7 @@ var [
   getTileLocation,
   DDA,
   handleGridCollision,
+  clearGridEntities,
   GRID_WIDTH,
   GRID_HEIGHT,
 ] = (function () {
@@ -22,7 +23,9 @@ var [
     return new Array(WIDTH * HEIGHT).fill(null).map((value) => {
       return {
         type: "",
-        isFloor: true,
+        blocksLOS: false,
+        blocksMovement: false,
+        entitiesContained: [],
       };
     });
   }
@@ -36,11 +39,16 @@ var [
   function getTileLocation(index) {
     return { x: index % WIDTH, y: Math.floor(index / HEIGHT) };
   }
-  function setGridTile(grid, x, y, value) {
+  function setGridTile(grid, x, y, parameter, value) {
     if (x < WIDTH && y < HEIGHT) {
-      grid[y * WIDTH + x] = value;
+      grid[y * WIDTH + x][parameter] = value;
     } else {
       throw new Error("Value not in grid");
+    }
+  }
+  function clearGridEntities(grid) {
+    for (let i of grid) {
+      i.entitiesContained.length = 0;
     }
   }
 
@@ -98,7 +106,7 @@ var [
 
       if (mapX < 0 || mapX >= WIDTH) hit = 2;
       else if (mapY < 0 || mapY >= HEIGHT) hit = 2;
-      else if (getGridTile(grid, mapX, mapY).type != "") hit = 1;
+      else if (getGridTile(grid, mapX, mapY).blocksLOS) hit = 1;
       else cellsIntersected.push({ x: mapX, y: mapY });
     }
 
@@ -151,7 +159,7 @@ var [
         let maxY = Math.floor(entity.pos.y + entity.size.h / 2);
 
         for (var y = minY; y <= maxY; y++) {
-          if (!getGridTile(grid, tileX, y).isFloor) {
+          if (getGridTile(grid, tileX, y).blocksMovement) {
             entity.pos.x = tileX - entity.size.w / 2 - FLOATING_POINT_MARGIN;
             break;
           }
@@ -162,7 +170,7 @@ var [
         let maxY = Math.floor(entity.pos.y + entity.size.h / 2);
 
         for (var y = minY; y <= maxY; y++) {
-          if (!getGridTile(grid, tileX, y).isFloor) {
+          if (getGridTile(grid, tileX, y).blocksMovement) {
             entity.pos.x =
               tileX + 1 + entity.size.w / 2 + FLOATING_POINT_MARGIN;
             break;
@@ -176,7 +184,7 @@ var [
         let maxX = Math.floor(entity.pos.x + entity.size.w / 2);
 
         for (var x = minX; x <= maxX; x++) {
-          if (!getGridTile(grid, x, tileY).isFloor) {
+          if (getGridTile(grid, x, tileY).blocksMovement) {
             entity.pos.y = tileY - entity.size.h / 2 - FLOATING_POINT_MARGIN;
             break;
           }
@@ -187,7 +195,7 @@ var [
         let maxX = Math.floor(entity.pos.x + entity.size.w / 2);
 
         for (var x = minX; x <= maxX; x++) {
-          if (!getGridTile(grid, x, tileY).isFloor) {
+          if (getGridTile(grid, x, tileY).blocksMovement) {
             entity.pos.y =
               tileY + 1 + entity.size.h / 2 + FLOATING_POINT_MARGIN;
             break;
@@ -204,6 +212,7 @@ var [
     getTileLocation,
     DDA,
     handleGridCollision,
+    clearGridEntities,
     WIDTH,
     HEIGHT,
   ];

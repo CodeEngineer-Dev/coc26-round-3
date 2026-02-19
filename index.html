@@ -40,10 +40,24 @@
         let grid = createGrid();
 
         // spawns walls
-        for (let i of grid) {
+        for (let index in grid) {
+          let pos = getTileLocation(index);
+          let i = grid[index];
           if (Math.random() < 0.05) {
-            //i.type = "wall";
-            //i.isFloor = false;
+            i.type = "hole";
+            i.blocksMovement = true;
+            i.blocksLOS = false;
+          }
+          if (
+            Math.random() < 0.05 ||
+            pos.x == 0 ||
+            pos.y == 0 ||
+            pos.x == GRID_WIDTH - 1 ||
+            pos.y == GRID_HEIGHT - 1
+          ) {
+            i.type = "wall";
+            i.blocksMovement = true;
+            i.blocksLOS = true;
           }
         }
         //*/
@@ -55,7 +69,12 @@
               y: getTileLocation(i).y + 0.5,
             },
             size: { w: 1, h: 1 },
-            debugFill: val.type == "wall" ? "#00000080" : "#00000000",
+            debugFill:
+              val.type == "wall"
+                ? "#00000080"
+                : val.type == "hole"
+                  ? "#00330080"
+                  : "#00000000",
             debugStroke: "#EEEEEE",
           };
         });
@@ -130,7 +149,7 @@
             spatial: {
               type: "spiral",
               number: 15,
-              aimed: false,
+              aimed: true,
               spiralPause: 5,
               shotgunAngleRange: Math.PI / 4,
             },
@@ -149,14 +168,15 @@
               windup: 60,
               cooldown: 30,
             },
-            tag: "string",
           },
+          tag: "string",
+          health: 50,
         };
         let samplePlayerConfig = {
           attack: {
             type: "bullet",
             spatial: {
-              type: "shotgun",
+              type: "single",
               number: 6,
               aimed: true,
               spiralPause: 0,
@@ -209,6 +229,112 @@
           }
           for (let projectile of playerProjectiles) {
             projectile.update();
+          }
+
+          // Empty grid
+          clearGridEntities(grid);
+
+          // Locate enemies in grid
+          for (let enemy of enemies) {
+            let minX = Math.floor(enemy.pos.x - enemy.size.w / 2);
+            let maxX = Math.floor(enemy.pos.x + enemy.size.w / 2);
+
+            let minY = Math.floor(enemy.pos.y - enemy.size.h / 2);
+            let maxY = Math.floor(enemy.pos.y + enemy.size.h / 2);
+
+            for (let i = minX; i <= maxX; i++) {
+              for (let j = minY; j <= maxY; j++) {
+                getGridTile(grid, i, j).entitiesContained.push(enemy);
+              }
+            }
+          }
+          // Locate player in grid
+          {
+            let minX = Math.floor(player.pos.x - player.size.w / 2);
+            let maxX = Math.floor(player.pos.x + player.size.w / 2);
+
+            let minY = Math.floor(player.pos.y - player.size.h / 2);
+            let maxY = Math.floor(player.pos.y + player.size.h / 2);
+
+            for (let i = minX; i <= maxX; i++) {
+              for (let j = minY; j <= maxY; j++) {
+                getGridTile(grid, i, j).entitiesContained.push(player);
+              }
+            }
+          }
+
+          // Now for projectile collisions
+
+          // First, player projectiles
+          for (let i = playerProjectiles.length - 1; i > -1; i--) {
+            let bulletGridX = Math.floor(playerProjectiles[i].pos.x);
+            let bulletGridY = Math.floor(playerProjectiles[i].pos.y);
+            let gridTile = getGridTile(grid, bulletGridX, bulletGridY);
+            let projectile = playerProjectiles[i];
+
+            if (gridTile.blocksLOS) {
+              playerProjectiles[i] =
+                playerProjectiles[playerProjectiles.length - 1];
+              playerProjectiles.pop();
+            } else {
+              for (let entity of gridTile.entitiesContained) {
+                if (
+                  entity instanceof Enemy &&
+                  pointCircle(
+                    projectile.pos.x,
+                    projectile.pos.y,
+                    entity.pos.x,
+                    entity.pos.y,
+                    entity.size.r,
+                  )
+                ) {
+                  entity.health -= projectile.damage;
+                  playerProjectiles[i] =
+                    playerProjectiles[playerProjectiles.length - 1];
+                  playerProjectiles.pop();
+                }
+              }
+            }
+          }
+
+          // Then, enemy projectiles
+          for (let i = enemyProjectiles.length - 1; i > -1; i--) {
+            let bulletGridX = Math.floor(enemyProjectiles[i].pos.x);
+            let bulletGridY = Math.floor(enemyProjectiles[i].pos.y);
+            let gridTile = getGridTile(grid, bulletGridX, bulletGridY);
+            let projectile = enemyProjectiles[i];
+
+            if (gridTile.blocksLOS) {
+              enemyProjectiles[i] =
+                enemyProjectiles[enemyProjectiles.length - 1];
+              enemyProjectiles.pop();
+            } else {
+              for (let entity of gridTile.entitiesContained) {
+                if (
+                  entity instanceof Player &&
+                  pointCircle(
+                    projectile.pos.x,
+                    projectile.pos.y,
+                    entity.pos.x,
+                    entity.pos.y,
+                    entity.size.r,
+                  )
+                ) {
+                  entity.health -= projectile.damage;
+                  enemyProjectiles[i] =
+                    enemyProjectiles[enemyProjectiles.length - 1];
+                  enemyProjectiles.pop();
+                }
+              }
+            }
+          }
+
+          // Now handle removing dead enemies
+          for (let i = enemies.length - 1; i > -1; i--) {
+            if (enemies[i].health <= 0) {
+              enemies[i] = enemies[enemies.length - 1];
+              enemies.pop();
+            }
           }
 
           debugRender(displayGrid);
