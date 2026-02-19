@@ -43,13 +43,13 @@
         for (let index in grid) {
           let pos = getTileLocation(index);
           let i = grid[index];
-          if (Math.random() < 0.05) {
+          if (Math.random() < 0.02) {
             i.type = "hole";
             i.blocksMovement = true;
             i.blocksLOS = false;
           }
           if (
-            Math.random() < 0.05 ||
+            Math.random() < 0.02 ||
             pos.x == 0 ||
             pos.y == 0 ||
             pos.x == GRID_WIDTH - 1 ||
@@ -99,6 +99,7 @@
               maxDist: number,
               minDist: number,
               preferredDist: number,
+              losRequired: boolean
             },
             attack: {
               type: "bullet",
@@ -143,11 +144,12 @@
             maxDist: 15,
             minDist: 5,
             preferredDist: 10,
+            requiresLOS: true,
           },
           attack: {
             type: "bullet",
             spatial: {
-              type: "spiral",
+              type: "single",
               number: 15,
               aimed: true,
               spiralPause: 5,
@@ -170,7 +172,7 @@
             },
           },
           tag: "string",
-          health: 50,
+          health: 100,
         };
         let samplePlayerConfig = {
           attack: {

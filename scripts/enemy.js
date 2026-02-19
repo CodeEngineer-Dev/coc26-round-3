@@ -180,6 +180,10 @@ class Enemy {
 
     this.debugFill = "#FF000080";
 
+    this.requiresLOS = config.engagement.requiresLOS;
+    this.currentState = "idle";
+    this.lastPos = { x: 0, y: 0 };
+
     this.attackTimer = 0;
     this.shotsThisRound = 0;
     this.burstTimer = 0;
@@ -190,27 +194,147 @@ class Enemy {
       this.debugFill = "#00AA0080";
     else this.debugFill = "#FF000080";
 
-    this.movement.update(grid, player.pos, this.engagement);
-    this.attack.update(grid, player.pos);
+    if (!this.requiresLOS) {
+      this.movement.update(grid, player.pos, this.engagement);
+      this.attack.update(grid, player.pos);
 
-    if (this.attackTimer <= 0) {
-      if (this.firing.type == "constant") {
-        if (this.attack.tryAttack()) this.attackTimer = this.firing.frequency;
-      } else if (this.firing.type == "burst") {
-        if (this.shotsThisRound < this.firing.burstNumber) {
-          if (this.attack.tryAttack()) {
-            this.shotsThisRound++;
-            this.attack.timing.windup = 0;
-            this.attack.timing.cooldown = this.firing.burstPause;
+      if (this.attackTimer <= 0) {
+        if (this.firing.type == "constant") {
+          if (this.attack.tryAttack()) this.attackTimer = this.firing.frequency;
+        } else if (this.firing.type == "burst") {
+          if (this.shotsThisRound < this.firing.burstNumber) {
+            if (this.attack.tryAttack()) {
+              this.shotsThisRound++;
+              this.attack.timing.windup = 0;
+              this.attack.timing.cooldown = this.firing.burstPause;
+            }
+          } else {
+            this.attackTimer = this.firing.frequency;
+            this.shotsThisRound = 0;
+            this.attack.timing.windup = this.backupTiming.windup;
           }
-        } else {
-          this.attackTimer = this.firing.frequency;
-          this.shotsThisRound = 0;
-          this.attack.timing.windup = this.backupTiming.windup;
         }
+      } else {
+        this.attackTimer--;
       }
     } else {
-      this.attackTimer--;
+      if (this.currentState == "idle") {
+        // check for line of sight
+        let angleToPlayer = Math.atan2(
+          player.pos.y - this.pos.y,
+          player.pos.x - this.pos.x,
+        );
+        let distSq =
+          (player.pos.x - this.pos.x) * (player.pos.x - this.pos.x) +
+          (player.pos.y - this.pos.y) * (player.pos.y - this.pos.y);
+
+        let ddaResults = DDA(grid, this.pos.x, this.pos.y, angleToPlayer);
+        if (ddaResults.hit) {
+          if (
+            ddaResults.distanceTraveled * ddaResults.distanceTraveled >
+            distSq
+          ) {
+            this.currentState = "aggressive";
+          }
+        } else {
+          this.currentState = "aggressive";
+        }
+      } else if (this.currentState == "aggressive") {
+        this.movement.update(grid, player.pos, this.engagement);
+        this.attack.update(grid, player.pos);
+
+        if (this.attackTimer <= 0) {
+          if (this.firing.type == "constant") {
+            if (this.attack.tryAttack())
+              this.attackTimer = this.firing.frequency;
+          } else if (this.firing.type == "burst") {
+            if (this.shotsThisRound < this.firing.burstNumber) {
+              if (this.attack.tryAttack()) {
+                this.shotsThisRound++;
+                this.attack.timing.windup = 0;
+                this.attack.timing.cooldown = this.firing.burstPause;
+              }
+            } else {
+              this.attackTimer = this.firing.frequency;
+              this.shotsThisRound = 0;
+              this.attack.timing.windup = this.backupTiming.windup;
+            }
+          }
+        } else {
+          this.attackTimer--;
+        }
+
+        // check for line of sight
+        let angleToPlayer = Math.atan2(
+          player.pos.y - this.pos.y,
+          player.pos.x - this.pos.x,
+        );
+        let distSq =
+          (player.pos.x - this.pos.x) * (player.pos.x - this.pos.x) +
+          (player.pos.y - this.pos.y) * (player.pos.y - this.pos.y);
+
+        let ddaResults = DDA(grid, this.pos.x, this.pos.y, angleToPlayer);
+        if (ddaResults.hit) {
+          if (
+            ddaResults.distanceTraveled * ddaResults.distanceTraveled <
+            distSq
+          ) {
+            this.currentState = "searching";
+            this.lastPos.x = player.pos.x;
+            this.lastPos.y = player.pos.y;
+          }
+        }
+      } else if (this.currentState == "searching") {
+        this.movement.update(grid, this.lastPos, {
+          minDist: 0,
+          maxDist: 1,
+          preferredDist: 0.5,
+        });
+        this.attack.update(grid, this.lastPos);
+        /*
+        if (this.attackTimer <= 0) {
+          if (this.firing.type == "constant") {
+            if (this.attack.tryAttack())
+              this.attackTimer = this.firing.frequency;
+          } else if (this.firing.type == "burst") {
+            if (this.shotsThisRound < this.firing.burstNumber) {
+              if (this.attack.tryAttack()) {
+                this.shotsThisRound++;
+                this.attack.timing.windup = 0;
+                this.attack.timing.cooldown = this.firing.burstPause;
+              }
+            } else {
+              this.attackTimer = this.firing.frequency;
+              this.shotsThisRound = 0;
+              this.attack.timing.windup = this.backupTiming.windup;
+            }
+          }
+        } else {
+          this.attackTimer--;
+        }
+          */
+
+        // check for line of sight
+        let angleToPlayer = Math.atan2(
+          player.pos.y - this.pos.y,
+          player.pos.x - this.pos.x,
+        );
+        let distSq =
+          (player.pos.x - this.pos.x) * (player.pos.x - this.pos.x) +
+          (player.pos.y - this.pos.y) * (player.pos.y - this.pos.y);
+
+        let ddaResults = DDA(grid, this.pos.x, this.pos.y, angleToPlayer);
+        if (ddaResults.hit) {
+          if (
+            ddaResults.distanceTraveled * ddaResults.distanceTraveled >
+            distSq
+          ) {
+            this.currentState = "aggressive";
+          }
+        } else {
+          this.currentState = "aggressive";
+        }
+      }
     }
   }
 }
