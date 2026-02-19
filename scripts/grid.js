@@ -9,8 +9,8 @@ var [
   GRID_WIDTH,
   GRID_HEIGHT,
 ] = (function () {
-  const WIDTH = 32;
-  const HEIGHT = 32;
+  const WIDTH = 24;
+  const HEIGHT = 24;
 
   /*
     Comes from https://lodev.org/cgtutor/raycasting.html
@@ -39,9 +39,9 @@ var [
   function getTileLocation(index) {
     return { x: index % WIDTH, y: Math.floor(index / HEIGHT) };
   }
-  function setGridTile(grid, x, y, parameter, value) {
+  function setGridTile(grid, x, y, value) {
     if (x < WIDTH && y < HEIGHT) {
-      grid[y * WIDTH + x][parameter] = value;
+      grid[y * WIDTH + x] = value;
     } else {
       throw new Error("Value not in grid");
     }

@@ -286,9 +286,9 @@ class Enemy {
         }
       } else if (this.currentState == "searching") {
         this.movement.update(grid, this.lastPos, {
-          minDist: 0,
-          maxDist: 1,
-          preferredDist: 0.5,
+          minDist: 0.001,
+          maxDist: 0.01,
+          preferredDist: 0.005,
         });
         this.attack.update(grid, this.lastPos);
         /*

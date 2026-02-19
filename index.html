@@ -31,36 +31,23 @@
     <script type src="scripts/input-handler.js"></script>
     <script type src="scripts/debug-renderer.js"></script>
     <script type src="scripts/grid.js"></script>
+    <script type src="scripts/room-generator.js"></script>
     <script type src="scripts/attack.js"></script>
     <script type src="scripts/player.js"></script>
     <script type src="scripts/enemy.js"></script>
 
     <script type>
       (function () {
-        let grid = createGrid();
-
-        // spawns walls
-        for (let index in grid) {
-          let pos = getTileLocation(index);
-          let i = grid[index];
-          if (Math.random() < 0.02) {
-            i.type = "hole";
-            i.blocksMovement = true;
-            i.blocksLOS = false;
-          }
-          if (
-            Math.random() < 0.02 ||
-            pos.x == 0 ||
-            pos.y == 0 ||
-            pos.x == GRID_WIDTH - 1 ||
-            pos.y == GRID_HEIGHT - 1
-          ) {
-            i.type = "wall";
-            i.blocksMovement = true;
-            i.blocksLOS = true;
-          }
-        }
-        //*/
+        let grid = createRoom({
+          type: "symmetric",
+          symmetryType: "xy",
+          wallNumber: 1,
+          holeNumber: 2,
+          clusterSize: {
+            w: 3,
+            h: 2,
+          },
+        });
 
         let displayGrid = grid.map((val, i) => {
           return {
@@ -74,7 +61,9 @@
                 ? "#00000080"
                 : val.type == "hole"
                   ? "#00330080"
-                  : "#00000000",
+                  : val.type == "door"
+                    ? "#88888880"
+                    : "#00000000",
             debugStroke: "#EEEEEE",
           };
         });
@@ -204,16 +193,24 @@
 
         let player = new Player(
           samplePlayerConfig,
-          { x: 16, y: 16 },
+          { x: GRID_WIDTH / 2, y: GRID_HEIGHT / 2 },
           playerProjectiles,
         );
 
         let enemies = [];
         enemies.push(
-          new Enemy(sampleEnemyConfig, { x: 8, y: 8 }, enemyProjectiles),
+          new Enemy(
+            sampleEnemyConfig,
+            { x: GRID_WIDTH / 4, y: GRID_HEIGHT / 4 },
+            enemyProjectiles,
+          ),
         );
         enemies.push(
-          new Enemy(sampleEnemyConfig, { x: 24, y: 24 }, enemyProjectiles),
+          new Enemy(
+            sampleEnemyConfig,
+            { x: (GRID_WIDTH * 3) / 4, y: (GRID_HEIGHT * 3) / 4 },
+            enemyProjectiles,
+          ),
         );
 
         function main() {

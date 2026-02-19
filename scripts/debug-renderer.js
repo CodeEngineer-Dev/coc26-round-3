@@ -1,7 +1,7 @@
 var [debugRender, prepDebugCanvas] = (function () {
   const canvas = document.getElementById("debug");
   const ctx = canvas.getContext("2d");
-  const SCALE = 15;
+  const SCALE = 25;
 
   function debugRenderSingle(i) {
     if ("pos" in i && "size" in i) {
