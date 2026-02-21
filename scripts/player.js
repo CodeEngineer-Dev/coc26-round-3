@@ -53,6 +53,8 @@ var Player = (function () {
       this.shotsThisRound = 0;
       this.burstTimer = 0;
 
+      this.hearts = config.hearts;
+
       this.speed = 0.05;
       this.dir = { x: 0, y: 0 };
     }
@@ -88,7 +90,7 @@ var Player = (function () {
       this.centerX = this.pos.x + this.size.w / 2;
       this.centerY = this.pos.y + this.size.h / 2;
     }
-    update(grid, enemies) {
+    update(grid, enemies, attackOn) {
       let closestEnemyPos = { x: 0, y: 0 };
       let closestEnemyDistSq = Infinity;
       if (enemies.length > 0) {
@@ -110,24 +112,27 @@ var Player = (function () {
 
       this.attack.update(grid, closestEnemyPos);
 
-      if (this.attackTimer <= 0) {
-        if (this.firing.type == "constant") {
-          if (this.attack.tryAttack()) this.attackTimer = this.firing.frequency;
-        } else if (this.firing.type == "burst") {
-          if (this.shotsThisRound < this.firing.burstNumber) {
-            if (this.attack.tryAttack()) {
-              this.shotsThisRound++;
-              this.attack.timing.windup = 0;
-              this.attack.timing.cooldown = this.firing.burstPause;
+      if (attackOn) {
+        if (this.attackTimer <= 0) {
+          if (this.firing.type == "constant") {
+            if (this.attack.tryAttack())
+              this.attackTimer = this.firing.frequency;
+          } else if (this.firing.type == "burst") {
+            if (this.shotsThisRound < this.firing.burstNumber) {
+              if (this.attack.tryAttack()) {
+                this.shotsThisRound++;
+                this.attack.timing.windup = 0;
+                this.attack.timing.cooldown = this.firing.burstPause;
+              }
+            } else {
+              this.attackTimer = this.firing.frequency;
+              this.shotsThisRound = 0;
+              this.attack.timing.windup = this.backupTiming.windup;
             }
-          } else {
-            this.attackTimer = this.firing.frequency;
-            this.shotsThisRound = 0;
-            this.attack.timing.windup = this.backupTiming.windup;
           }
+        } else {
+          this.attackTimer--;
         }
-      } else {
-        this.attackTimer--;
       }
     }
   }

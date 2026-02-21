@@ -1,16 +1,3 @@
-const rooms = [
-  {
-    type: "symmetric",
-    symmetryType: "x&y",
-    wallNumber: 5,
-    holeNumber: 5,
-    clusterSize: {
-      w: 2,
-      h: 2,
-    },
-  },
-];
-
 /*
 const flows = [
   [
@@ -96,7 +83,12 @@ function generatePotentialDungeon(level) {
   let numRoomsNeeded = Math.floor(Math.random() * 2 + 5 + level * 2.6);
 
   let startingRoom = 35;
-  grid[startingRoom] = { type: "entrance", end: false, start: true };
+  grid[startingRoom] = {
+    type: "entrance",
+    end: false,
+    start: true,
+    cleared: false,
+  };
 
   let queue = [startingRoom];
 
@@ -125,7 +117,12 @@ function generatePotentialDungeon(level) {
       if (queue.length == numRoomsNeeded) continue;
       if (Math.random() < 0.5) continue;
 
-      grid[neighborLoc] = { boss: false, end: false, start: false };
+      grid[neighborLoc] = {
+        type: "normal",
+        end: false,
+        start: false,
+        cleared: false,
+      };
       queue.push(neighborLoc);
       addedRoom = true;
     }
