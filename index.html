@@ -31,20 +31,21 @@
     <script type src="scripts/input-handler.js"></script>
     <script type src="scripts/debug-renderer.js"></script>
     <script type src="scripts/grid.js"></script>
-    <script type src="scripts/room-generator.js"></script>
     <script type src="scripts/attack.js"></script>
     <script type src="scripts/player.js"></script>
     <script type src="scripts/enemy.js"></script>
+    <script type src="scripts/room-generator.js"></script>
+    <script type src="scripts/dungeon-generator.js"></script>
 
     <script type>
       (function () {
         let grid = createRoom({
           type: "symmetric",
-          symmetryType: "xy",
-          wallNumber: 1,
-          holeNumber: 2,
+          symmetryType: "x&y",
+          wallNumber: 5,
+          holeNumber: 5,
           clusterSize: {
-            w: 3,
+            w: 2,
             h: 2,
           },
         });
@@ -121,8 +122,8 @@
         */
         let sampleEnemyConfig = {
           movement: {
-            type: "chase",
-            speed: 0.03,
+            type: "wander",
+            speed: 0.025,
           },
           size: {
             w: 0.7,
@@ -130,15 +131,15 @@
             r: 0.35,
           },
           engagement: {
-            maxDist: 15,
-            minDist: 5,
-            preferredDist: 10,
-            requiresLOS: true,
+            maxDist: 5,
+            minDist: 1,
+            preferredDist: 3,
+            requiresLOS: false,
           },
           attack: {
             type: "bullet",
             spatial: {
-              type: "single",
+              type: "spiral",
               number: 15,
               aimed: true,
               spiralPause: 5,
@@ -151,7 +152,7 @@
               burstPause: 30,
             },
             projectile: {
-              speed: 0.1,
+              speed: 0.05,
               modifiers: "none",
               damage: 5,
             },
