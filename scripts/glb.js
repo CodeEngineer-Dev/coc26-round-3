@@ -1121,6 +1121,10 @@ const { Renderer, RenderComponent } = (function () {
       uniform bool isNormalMap;
       uniform sampler2D normalMap;
 
+      uniform bool isEmissiveMap;
+      uniform sampler2D emissiveMap;
+      uniform vec3 emissiveFactor;
+
       void main() {
       Material material;
 
@@ -1176,6 +1180,12 @@ const { Renderer, RenderComponent } = (function () {
       }
       for (uint i = 0u; i < numSpotLights; i++) {
           result += CalcSpotLight(spotLights[i], material, norm, v_fragPos, viewDir);
+      }
+
+      if (isEmissiveMap) {
+        result += texture(emissiveMap, v_texcoord_0).rgb * emissiveFactor;
+      } else {
+        result += emissiveFactor;
       }
 
       // No transparents allowed yet.
@@ -1400,11 +1410,9 @@ const { Renderer, RenderComponent } = (function () {
             primitive.material.folder,
             primitive.material.index,
           );
+
           // If not a light, check if can be frustum culled. (Lights must be in the scene even if not visible because they can influence visible objects' lighting.)
-          if (
-            material.emissiveFactor == undefined ||
-            JSON.stringify(material.emissiveFactor) == noEmissiveFactor
-          ) {
+          if (component.light == null) {
             /// BEGIN AI CODE - I was struggling with some bugs here and AI helped me get it correct.
             // Calculate center of the object in local coordinate space
             glMatrix.vec3.add(center, primitive.vMin, primitive.vMax);
@@ -1439,19 +1447,7 @@ const { Renderer, RenderComponent } = (function () {
           // Get the material
 
           // Sort by material
-          if (
-            material.emissiveFactor != undefined &&
-            JSON.stringify(material.emissiveFactor) != noEmissiveFactor
-          ) {
-            if (
-              primitiveInstance.light == null ||
-              primitiveInstance.light == undefined
-            ) {
-              primitiveInstance.light = {
-                lightType: "point",
-                lightRange: 30,
-              };
-            }
+          if (primitiveInstance.light != null) {
             // This is a light
             if ("emissiveTexture" in material) {
               // This is a lighted texture
@@ -1493,6 +1489,16 @@ const { Renderer, RenderComponent } = (function () {
               // This is a normal solid color object.
               sortedLists.opaque.solid.push(primitiveInstance);
             }
+
+            if ("emissiveFactor" in material) {
+              primitiveInstance.emissiveFactor = material.emissiveFactor;
+            }
+            if ("emissiveTexture" in material) {
+              let folder = primitive.material.folder;
+              let index = material.emissiveTexture.index;
+
+              primitiveInstance.emissiveTexture = { folder, index };
+            }
           } else if (material.alphaMode == "BLEND") {
             if ("baseColorTexture" in material.pbrMetallicRoughness) {
               // This is a textured material.
@@ -1512,6 +1518,16 @@ const { Renderer, RenderComponent } = (function () {
             } else {
               // This is a normal solid color object.
               sortedLists.blend.solid.push(primitiveInstance);
+            }
+
+            if ("emissiveFactor" in material) {
+              primitiveInstance.emissiveFactor = material.emissiveFactor;
+            }
+            if ("emissiveTexture" in material) {
+              let folder = primitive.material.folder;
+              let index = material.emissiveTexture.index;
+
+              primitiveInstance.emissiveTexture = { folder, index };
             }
           }
         }
@@ -1618,7 +1634,7 @@ const { Renderer, RenderComponent } = (function () {
       // Get a list.
       const primitiveList = this.cullAndSortPrimitives(flatList);
       // Clear the canvas
-      this.gl.clearColor(0.7, 0.9, 1.0, 1.0);
+      this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
       this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
       // Get the projection matrix.
       const projection = glMatrix.mat4.create();
@@ -1777,10 +1793,12 @@ const { Renderer, RenderComponent } = (function () {
       let lastBoundAlbedo = null;
       let lastBoundNormal = null;
       let lastBoundRoughMetal = null;
+      let lastBoundEmissive = null;
 
       shader.setUniform("pbr_material.isTexture", true);
 
       const textures = primitiveList.opaque.texture;
+      console.log(textures);
       for (const folder in textures) {
         for (const index in textures[folder]) {
           if (
@@ -1848,6 +1866,30 @@ const { Renderer, RenderComponent } = (function () {
                 "pbr_material.roughness",
                 material?.pbrMetallicRoughness.roughnessFactor ?? 0,
               );
+            }
+
+            console.log(material);
+            if ("emissiveFactor" in material) {
+              shader.setUniform("emissiveFactor", material.emissiveFactor);
+
+              if ("emissiveTexture" in material) {
+                let emissiveTexLoc = this.assetManager.getTexture(
+                  folder,
+                  Number(material.emissiveTexture.index),
+                );
+                if (emissiveTexLoc != lastBoundEmissive) {
+                  shader.setUniform("isEmissiveMap", true);
+                  this.gl.activeTexture(this.gl.TEXTURE3);
+                  this.gl.bindTexture(this.gl.TEXTURE_2D, emissiveTexLoc);
+                  shader.setUniform("emissiveMap", 3);
+                  lastBoundEmissive = emissiveTexLoc;
+                } else {
+                  shader.setUniform("isEmissiveMap", false);
+                }
+              }
+            } else {
+              shader.setUniform("emissiveFactor", [0, 0, 0]);
+              shader.setUniform("isEmissiveMap", false);
             }
 
             this.gl.bindVertexArray(primitive.vao);
