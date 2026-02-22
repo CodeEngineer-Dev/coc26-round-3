@@ -55,7 +55,7 @@ var Player = (function () {
 
       this.hearts = config.hearts;
 
-      this.speed = 0.05;
+      this.speed = 0.1;
       this.dir = { x: 0, y: 0 };
     }
     handleUserInput() {

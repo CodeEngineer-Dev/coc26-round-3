@@ -27,6 +27,13 @@
     <canvas id="render" width="600" height="600"></canvas>
     <canvas id="overlay" width="600" height="600"></canvas>
     <canvas id="debug" width="600" height="600"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.4.4/gl-matrix-min.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/upng-js/2.1.0/UPNG.min.js"></script>
+
+    <script type src="scripts/base64strings.js"></script>
+    <script type src="scripts/glb.js"></script>
     <script type src="scripts/utils.js"></script>
     <script type src="scripts/input-handler.js"></script>
     <script type src="scripts/debug-renderer.js"></script>
@@ -40,16 +47,30 @@
 
     <script type>
       (function () {
+        const renderer = new Renderer("render");
+
+        renderer.assetManager.loadFromBase64("floor", floorTile);
+        renderer.assetManager.loadFromBase64("cube", cube);
+        console.log(renderer.assetManager);
+
+        renderer.scene.addComponent(new RenderComponent("floor/Floor"));
+        //renderer.scene.addComponent(new RenderComponent("cube/Cube"));
+
+        renderer.scene.camera.transform.setTranslation(0, 1, 2);
+
+        renderer.render();
+
         let currentLevel = new LevelManager(0, currentPlayerConfig);
 
         function main() {
-          prepDebugCanvas();
-          currentLevel.update();
-          currentLevel.display();
+          //renderer.render();
+          //prepDebugCanvas();
+          //currentLevel.update();
+          //currentLevel.display();
 
           requestAnimationFrame(main);
         }
-        requestAnimationFrame(main);
+        //requestAnimationFrame(main);
       })();
     </script>
   </body>

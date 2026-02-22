@@ -3,7 +3,7 @@ const roomConfigs = [
     type: "symmetric",
     symmetryType: "x&y",
     wallNumber: 1,
-    holeNumber: 3,
+    holeNumber: 2,
     clusterSize: {
       w: 2,
       h: 2,

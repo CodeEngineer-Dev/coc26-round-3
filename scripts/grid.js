@@ -9,8 +9,8 @@ var [
   GRID_WIDTH,
   GRID_HEIGHT,
 ] = (function () {
-  const WIDTH = 24;
-  const HEIGHT = 24;
+  const WIDTH = 16;
+  const HEIGHT = 16;
 
   /*
     Comes from https://lodev.org/cgtutor/raycasting.html
