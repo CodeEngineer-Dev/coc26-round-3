@@ -53,24 +53,31 @@
         renderer.assetManager.loadFromBase64("cube", cube);
         console.log(renderer.assetManager);
 
-        renderer.scene.addComponent(new RenderComponent("floor/Floor"));
+        renderer.scene.addComponent(
+          new RenderComponent(
+            "floor/Floor",
+            {},
+            { strength: 2, color: [0.5, 1.0, 0.5] },
+          ),
+        );
         //renderer.scene.addComponent(new RenderComponent("cube/Cube"));
 
-        renderer.scene.camera.transform.setTranslation(0, 1, 2);
+        renderer.scene.camera.transform.setTranslation(0, 1, 0.001);
+        renderer.scene.camera.transform.setLookTowards([0, 0, 0]);
 
-        renderer.render();
+        //renderer.render();
 
         let currentLevel = new LevelManager(0, currentPlayerConfig);
 
         function main() {
-          //renderer.render();
+          renderer.render();
           //prepDebugCanvas();
           //currentLevel.update();
           //currentLevel.display();
 
           requestAnimationFrame(main);
         }
-        //requestAnimationFrame(main);
+        requestAnimationFrame(main);
       })();
     </script>
   </body>

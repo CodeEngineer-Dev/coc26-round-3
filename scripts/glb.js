@@ -588,7 +588,10 @@ const { Renderer, RenderComponent } = (function () {
      *
      * @constructor
      * @param {string} meshPath Mesh path in the form "fileName/meshName"
-     * @param {?LightComponent} [light] If defined, contains properties needed for emissive meshes. Mesh must contain primitive with emissive factor.
+     * @param {?EmissiveComponent} [emissive] If defined, contains properties needed for emissive meshes.
+     * @param {?number} [emissive.strength] Emissive strength
+     * @param {?number} [emissive.color] Emissive color
+     * @param {?LightComponent} [light] If defined, contains properties needed for light meshes. Mesh must contain primitive.
      * @param {?string} [light.lightType] Either "point" or "spot"
      * @param {?lightRange} [light.lightRange] Determines range of light
      * @param {?direction} [light.direction] Used for spot lights, determines direction of spot light.
@@ -596,9 +599,10 @@ const { Renderer, RenderComponent } = (function () {
      * @param {?outerCutOff} [light.outerCutOff] Used for spot lights, cosine of angle in radians at which spotlight ends completely
      *
      */
-    constructor(meshPath, transforms, light) {
+    constructor(meshPath, transforms, emissive, light) {
       this.mesh = meshPath;
       this.transform = new Transform(transforms);
+      this.emissive = emissive || null;
       this.light = light || null;
     }
   }
@@ -1124,6 +1128,7 @@ const { Renderer, RenderComponent } = (function () {
       uniform bool isEmissiveMap;
       uniform sampler2D emissiveMap;
       uniform vec3 emissiveFactor;
+      uniform float emissiveStrength;
 
       void main() {
       Material material;
@@ -1183,7 +1188,7 @@ const { Renderer, RenderComponent } = (function () {
       }
 
       if (isEmissiveMap) {
-        result += texture(emissiveMap, v_texcoord_0).rgb * emissiveFactor;
+        result += texture(emissiveMap, v_texcoord_0).rgb * emissiveFactor * emissiveStrength;
       } else {
         result += emissiveFactor;
       }
@@ -1227,9 +1232,9 @@ const { Renderer, RenderComponent } = (function () {
       // Set directional light defaults
       this.directionalLight = {
         direction: glMatrix.vec3.fromValues(0.3, -0.5, -0.8),
-        ambient: glMatrix.vec3.fromValues(1.0, 1.0, 1.0),
+        ambient: glMatrix.vec3.fromValues(0.3, 0.3, 0.3),
         diffuse: glMatrix.vec3.fromValues(1.0, 1.0, 1.0),
-        specular: glMatrix.vec3.fromValues(1.0, 1.0, 1.0),
+        specular: glMatrix.vec3.fromValues(0.5, 0.5, 0.5),
       };
     }
     /** Utility function used for changing internal canvas sizes when canvas dimensions are changed. */
@@ -1491,7 +1496,11 @@ const { Renderer, RenderComponent } = (function () {
             }
 
             if ("emissiveFactor" in material) {
-              primitiveInstance.emissiveFactor = material.emissiveFactor;
+              primitiveInstance.emissiveFactor =
+                component.renderComponent.emissive.color ||
+                material.emissiveFactor;
+              primitiveInstance.emissiveStrength =
+                component.renderComponent.emissive.strength || 1;
             }
             if ("emissiveTexture" in material) {
               let folder = primitive.material.folder;
@@ -1756,6 +1765,8 @@ const { Renderer, RenderComponent } = (function () {
         );
       }
 
+      let lastBoundEmissive = null;
+
       // Solid colored primitives
       shader.setUniform("pbr_material.isTexture", false);
       shader.setUniform("pbr_material.isMRt", false);
@@ -1780,6 +1791,31 @@ const { Renderer, RenderComponent } = (function () {
           "pbr_material.roughness",
           material?.pbrMetallicRoughness.roughnessFactor ?? 0,
         );
+
+        if ("emissiveFactor" in material) {
+          shader.setUniform("emissiveFactor", primitive.emissiveFactor);
+          shader.setUniform("emissiveStrength", primitive.emissiveStrength);
+
+          if ("emissiveTexture" in material) {
+            let emissiveTexLoc = this.assetManager.getTexture(
+              folder,
+              Number(material.emissiveTexture.index),
+            );
+            if (emissiveTexLoc != lastBoundEmissive) {
+              shader.setUniform("isEmissiveMap", true);
+              this.gl.activeTexture(this.gl.TEXTURE3);
+              this.gl.bindTexture(this.gl.TEXTURE_2D, emissiveTexLoc);
+              shader.setUniform("emissiveMap", 3);
+              lastBoundEmissive = emissiveTexLoc;
+            } else {
+              shader.setUniform("isEmissiveMap", false);
+            }
+          }
+        } else {
+          shader.setUniform("emissiveFactor", [0, 0, 0]);
+          shader.setUniform("isEmissiveMap", false);
+        }
+
         this.gl.bindVertexArray(primitive.vao);
         this.gl.drawElements(
           primitive.mode,
@@ -1793,12 +1829,10 @@ const { Renderer, RenderComponent } = (function () {
       let lastBoundAlbedo = null;
       let lastBoundNormal = null;
       let lastBoundRoughMetal = null;
-      let lastBoundEmissive = null;
 
       shader.setUniform("pbr_material.isTexture", true);
 
       const textures = primitiveList.opaque.texture;
-      console.log(textures);
       for (const folder in textures) {
         for (const index in textures[folder]) {
           if (
@@ -1868,9 +1902,9 @@ const { Renderer, RenderComponent } = (function () {
               );
             }
 
-            console.log(material);
             if ("emissiveFactor" in material) {
-              shader.setUniform("emissiveFactor", material.emissiveFactor);
+              shader.setUniform("emissiveFactor", primitive.emissiveFactor);
+              shader.setUniform("emissiveStrength", primitive.emissiveStrength);
 
               if ("emissiveTexture" in material) {
                 let emissiveTexLoc = this.assetManager.getTexture(
