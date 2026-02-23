@@ -693,6 +693,16 @@ const { Renderer, RenderComponent } = (function () {
         this.componentList.pop();
       }
     }
+    addComponentList(componentList) {
+      for (let i of componentList) {
+        this.addComponent(i);
+      }
+    }
+    removeComponentList(componentList) {
+      for (let i of componentList) {
+        this.removeComponent(i);
+      }
+    }
     crawlNode(nodeList, node, parent = null) {
       if ("camera" in node) {
         this.camera.transform.setTranslation(
@@ -1801,15 +1811,15 @@ const { Renderer, RenderComponent } = (function () {
               folder,
               Number(material.emissiveTexture.index),
             );
+            shader.setUniform("isEmissiveMap", true);
             if (emissiveTexLoc != lastBoundEmissive) {
-              shader.setUniform("isEmissiveMap", true);
               this.gl.activeTexture(this.gl.TEXTURE3);
               this.gl.bindTexture(this.gl.TEXTURE_2D, emissiveTexLoc);
               shader.setUniform("emissiveMap", 3);
               lastBoundEmissive = emissiveTexLoc;
-            } else {
-              shader.setUniform("isEmissiveMap", false);
             }
+          } else {
+            shader.setUniform("isEmissiveMap", false);
           }
         } else {
           shader.setUniform("emissiveFactor", [0, 0, 0]);
@@ -1911,15 +1921,15 @@ const { Renderer, RenderComponent } = (function () {
                   folder,
                   Number(material.emissiveTexture.index),
                 );
+                shader.setUniform("isEmissiveMap", true);
                 if (emissiveTexLoc != lastBoundEmissive) {
-                  shader.setUniform("isEmissiveMap", true);
                   this.gl.activeTexture(this.gl.TEXTURE3);
                   this.gl.bindTexture(this.gl.TEXTURE_2D, emissiveTexLoc);
                   shader.setUniform("emissiveMap", 3);
                   lastBoundEmissive = emissiveTexLoc;
-                } else {
-                  shader.setUniform("isEmissiveMap", false);
                 }
+              } else {
+                shader.setUniform("isEmissiveMap", false);
               }
             } else {
               shader.setUniform("emissiveFactor", [0, 0, 0]);

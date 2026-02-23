@@ -295,6 +295,9 @@ class LevelManager {
 
     this.playerAttack = false;
     this.doorsOpen = false;
+
+    this.gridRenderComponentList = [];
+    this.initializedRoomRenderComponents = false;
   }
 
   spawnEnemies() {
@@ -482,7 +485,7 @@ class LevelManager {
       }
     }
   }
-  display() {
+  debugDisplay() {
     let displayGrid = this.roomGrid.map((val, i) => {
       return {
         pos: {
@@ -509,5 +512,57 @@ class LevelManager {
     debugRender(this.enemies);
     debugRender(this.enemyProjectiles);
     debugRender(this.playerProjectiles);
+  }
+  display(renderer) {
+    if (!this.initializedRoomRenderComponents) {
+      this.gridRenderComponentList.length = 0;
+      for (let i in this.roomGrid) {
+        let loc = getTileLocation(i);
+        let tile = this.roomGrid[i];
+
+        if (tile.type == "wall") {
+          this.gridRenderComponentList.push(
+            new RenderComponent(
+              "models/Wall",
+              {
+                translation: [loc.x, 0, loc.y],
+              },
+              {
+                strength: 2,
+                color: [1, 1, 1],
+              },
+            ),
+          );
+        } else if (tile.type == "hole") {
+          this.gridRenderComponentList.push(
+            new RenderComponent(
+              "models/Floor",
+              {
+                translation: [loc.x, 0, loc.y],
+              },
+              {
+                strength: 2,
+                color: [1, 0, 0],
+              },
+            ),
+          );
+        } else if (tile.type == "") {
+          this.gridRenderComponentList.push(
+            new RenderComponent(
+              "models/Floor",
+              {
+                translation: [loc.x, 0, loc.y],
+              },
+              {
+                strength: 2,
+                color: [0.7, 1, 1],
+              },
+            ),
+          );
+        }
+      }
+      renderer.scene.addComponentList(this.gridRenderComponentList);
+      this.initializedRoomRenderComponents = true;
+    }
   }
 }
