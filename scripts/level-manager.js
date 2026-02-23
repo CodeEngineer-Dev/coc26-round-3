@@ -521,15 +521,13 @@ class LevelManager {
     debugRender(this.playerProjectiles);
   }
   display(renderer) {
-    let xOffset =
-      this.cameraRad * Math.cos(-this.player.rotation + Math.PI / 2);
-    let yOffset =
-      this.cameraRad * Math.sin(-this.player.rotation + Math.PI / 2);
+    let xOffset = this.cameraRad * Math.cos(-this.player.rotation + Math.PI);
+    let zOffset = this.cameraRad * Math.sin(-this.player.rotation + Math.PI);
 
     renderer.scene.camera.transform.setTranslation(
       this.player.pos.x + xOffset,
       this.player.camHeight,
-      this.player.pos.y + yOffset,
+      this.player.pos.y + zOffset,
     );
     renderer.scene.camera.transform.setLookTowards([
       this.player.pos.x,

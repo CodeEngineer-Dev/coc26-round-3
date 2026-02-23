@@ -57,7 +57,7 @@ var Player = (function () {
 
       this.speed = 0.1;
       this.dir = { x: 0, y: 0 };
-      this.rotation = 0;
+      this.rotation = Math.PI / 2;
       this.camHeight = 2;
     }
     handleUserInput() {
@@ -98,16 +98,21 @@ var Player = (function () {
         this.dir.y *= 0.71;
       }
 
-      let cos = Math.cos(this.rotation);
-      let sin = Math.sin(this.rotation);
+      // Used Claude to help me work out correct rotated movement code
 
-      let worldDirX = this.dir.x * cos - this.dir.y * sin;
-      let worldDirY = this.dir.x * sin - this.dir.y * cos;
+      let cos = Math.cos(-this.rotation);
+      let sin = Math.sin(-this.rotation);
 
-      this.pos.x += worldDirX * this.speed;
+      let inputX = this.dir.x;
+      let inputY = this.dir.y;
+
+      this.dir.x = -inputY * cos + -inputX * sin;
+      this.dir.y = -inputY * sin - -inputX * cos;
+
+      this.pos.x += this.dir.x * this.speed;
       handleGridCollision(grid, this, "x");
 
-      this.pos.y += worldDirY * this.speed;
+      this.pos.y += this.dir.y * this.speed;
       handleGridCollision(grid, this, "y");
 
       this.centerX = this.pos.x + this.size.w / 2;
