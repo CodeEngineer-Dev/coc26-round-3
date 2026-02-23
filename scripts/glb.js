@@ -207,12 +207,12 @@ const { Renderer, RenderComponent } = (function () {
           this.gl.texParameteri(
             this.gl.TEXTURE_2D,
             this.gl.TEXTURE_MIN_FILTER,
-            sampler.minFilter,
+            this.gl.LINEAR_MIPMAP_LINEAR,
           );
           this.gl.texParameteri(
             this.gl.TEXTURE_2D,
             this.gl.TEXTURE_MAG_FILTER,
-            sampler.magFilter,
+            this.gl.NEAREST,
           );
           this.gl.texParameteri(
             this.gl.TEXTURE_2D,
@@ -667,14 +667,15 @@ const { Renderer, RenderComponent } = (function () {
      *
      * @param {RenderComponent} component
      */
-    addComponent(component) {
+    addComponent(component, name) {
       if (component instanceof RenderComponent) {
-        this.componentList.push({
-          name: "who cares lol",
+        let obj = {
+          name,
           renderComponent: component,
           parent: null,
           worldMatrix: glMatrix.mat4.create(),
-        });
+        };
+        this.componentList.push(obj);
       } else {
         this.componentList.push(component);
       }
@@ -693,14 +694,24 @@ const { Renderer, RenderComponent } = (function () {
         this.componentList.pop();
       }
     }
-    addComponentList(componentList) {
+    addComponentList(componentList, name) {
       for (let i of componentList) {
-        this.addComponent(i);
+        this.addComponent(i, name);
       }
     }
     removeComponentList(componentList) {
       for (let i of componentList) {
         this.removeComponent(i);
+      }
+    }
+    removeComponentsByName(name) {
+      for (let i = this.componentList.length - 1; i > -1; i--) {
+        let obj = this.componentList[i];
+        if (obj.name == name) {
+          this.componentList[i] =
+            this.componentList[this.componentList.length - 1];
+          this.componentList.pop();
+        }
       }
     }
     crawlNode(nodeList, node, parent = null) {
@@ -1241,10 +1252,10 @@ const { Renderer, RenderComponent } = (function () {
       };
       // Set directional light defaults
       this.directionalLight = {
-        direction: glMatrix.vec3.fromValues(0.3, -0.5, -0.8),
-        ambient: glMatrix.vec3.fromValues(0.3, 0.3, 0.3),
-        diffuse: glMatrix.vec3.fromValues(1.0, 1.0, 1.0),
-        specular: glMatrix.vec3.fromValues(0.5, 0.5, 0.5),
+        direction: glMatrix.vec3.fromValues(0.3, -0.5, -1.0),
+        ambient: glMatrix.vec3.fromValues(0.1, 0.1, 0.1),
+        diffuse: glMatrix.vec3.fromValues(0.3, 0.3, 0.3),
+        specular: glMatrix.vec3.fromValues(0.1, 0.1, 0.1),
       };
     }
     /** Utility function used for changing internal canvas sizes when canvas dimensions are changed. */

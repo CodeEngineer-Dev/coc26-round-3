@@ -168,6 +168,7 @@ class Enemy {
       h: config.size.h,
       r: config.size.r,
     };
+    this.mesh = "models/Enemy";
     this.movement = new MovementHandler(config, this.pos, this.size);
     this.firing = structuredClone(config.attack.firing);
     this.engagement = structuredClone(config.engagement);
@@ -187,6 +188,9 @@ class Enemy {
     this.attackTimer = 0;
     this.shotsThisRound = 0;
     this.burstTimer = 0;
+
+    this.rotation = 0;
+    this.rotationSpeed = 2;
   }
   update(grid, player) {
     if (this.attack.currentState == "windup") this.debugFill = "#0000AA80";

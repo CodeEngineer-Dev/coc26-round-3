@@ -298,6 +298,11 @@ class LevelManager {
 
     this.gridRenderComponentList = [];
     this.initializedRoomRenderComponents = false;
+    this.initializedPlayerRenderComponent = false;
+    this.playerRenderComponent;
+
+    this.cameraRot = 0;
+    this.cameraRad = 2;
   }
 
   spawnEnemies() {
@@ -329,6 +334,8 @@ class LevelManager {
       this.spawnEnemies();
       this.playerAttack = true;
     }
+
+    this.initializedRoomRenderComponents = false;
   }
 
   update() {
@@ -514,18 +521,58 @@ class LevelManager {
     debugRender(this.playerProjectiles);
   }
   display(renderer) {
+    let xOffset =
+      this.cameraRad * Math.cos(-this.player.rotation + Math.PI / 2);
+    let yOffset =
+      this.cameraRad * Math.sin(-this.player.rotation + Math.PI / 2);
+
+    renderer.scene.camera.transform.setTranslation(
+      this.player.pos.x + xOffset,
+      this.player.camHeight,
+      this.player.pos.y + yOffset,
+    );
+    renderer.scene.camera.transform.setLookTowards([
+      this.player.pos.x,
+      0.5,
+      this.player.pos.y,
+    ]);
+
+    if (!this.initializedPlayerRenderComponent) {
+      this.playerRenderComponent = new RenderComponent(
+        "models/Player",
+        {
+          translation: [this.player.pos.x, 0, this.player.pos.y],
+        },
+        { strength: 1 },
+      );
+      renderer.scene.addComponent(this.playerRenderComponent, "player");
+      this.initializedPlayerRenderComponent = true;
+    } else {
+      this.playerRenderComponent.transform.setTranslation(
+        this.player.pos.x,
+        0,
+        this.player.pos.y,
+      );
+      this.playerRenderComponent.transform.setRotation(
+        0,
+        (this.player.rotation * 180) / Math.PI,
+        0,
+      );
+    }
     if (!this.initializedRoomRenderComponents) {
+      renderer.scene.removeComponentsByName("levelTile");
       this.gridRenderComponentList.length = 0;
       for (let i in this.roomGrid) {
         let loc = getTileLocation(i);
         let tile = this.roomGrid[i];
+        let translation = [loc.x + 0.5, 0, loc.y + 0.5];
 
         if (tile.type == "wall") {
           this.gridRenderComponentList.push(
             new RenderComponent(
               "models/Wall",
               {
-                translation: [loc.x, 0, loc.y],
+                translation,
               },
               {
                 strength: 2,
@@ -538,7 +585,7 @@ class LevelManager {
             new RenderComponent(
               "models/Floor",
               {
-                translation: [loc.x, 0, loc.y],
+                translation,
               },
               {
                 strength: 2,
@@ -551,7 +598,7 @@ class LevelManager {
             new RenderComponent(
               "models/Floor",
               {
-                translation: [loc.x, 0, loc.y],
+                translation,
               },
               {
                 strength: 2,
@@ -561,8 +608,84 @@ class LevelManager {
           );
         }
       }
-      renderer.scene.addComponentList(this.gridRenderComponentList);
+      renderer.scene.addComponentList(
+        this.gridRenderComponentList,
+        "levelTile",
+      );
       this.initializedRoomRenderComponents = true;
+    }
+    renderer.scene.removeComponentsByName("door");
+    for (let i in this.roomGrid) {
+      let tile = this.roomGrid[i];
+      if (tile.type == "door") {
+        let loc = getTileLocation(i);
+        let translation = [loc.x + 0.5, 0, loc.y + 0.5];
+        if (tile.blocksLOS) {
+          renderer.scene.addComponent(
+            new RenderComponent(
+              "models/Wall",
+              {
+                translation,
+              },
+              {
+                strength: 2,
+                color: [1.0, 0.3, 0.3],
+              },
+            ),
+            "door",
+          );
+        } else {
+          renderer.scene.addComponent(
+            new RenderComponent(
+              "models/Floor",
+              {
+                translation,
+              },
+              {
+                strength: 2,
+                color: [0.7, 1, 0.7],
+              },
+            ),
+            "door",
+          );
+        }
+      }
+    }
+
+    renderer.scene.removeComponentsByName("bullet");
+    for (let i of this.enemyProjectiles) {
+      let renderComponent = new RenderComponent(
+        "models/Bullet",
+        {
+          translation: [i.pos.x, 0.5, i.pos.y],
+        },
+        { strength: 2, color: [1.0, 0.7, 0.7] },
+      );
+      renderer.scene.addComponent(renderComponent, "bullet");
+    }
+    for (let i of this.playerProjectiles) {
+      let renderComponent = new RenderComponent(
+        "models/Bullet",
+        {
+          translation: [i.pos.x, 0.5, i.pos.y],
+        },
+        { strength: 2, color: [0.7, 0.7, 1.0] },
+      );
+      renderer.scene.addComponent(renderComponent, "bullet");
+    }
+
+    renderer.scene.removeComponentsByName("enemy");
+    for (let i of this.enemies) {
+      let renderComponent = new RenderComponent(
+        i.mesh,
+        {
+          translation: [i.pos.x, 0.5, i.pos.y],
+        },
+        { strength: 1, color: [0.5, 0.1, 0.1] },
+      );
+      renderComponent.transform.setRotation(0, i.rotation, 0);
+      i.rotation += i.rotationSpeed;
+      renderer.scene.addComponent(renderComponent, "enemy");
     }
   }
 }

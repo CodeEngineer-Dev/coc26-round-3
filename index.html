@@ -21,6 +21,9 @@
         width: 600;
         height: 600;
       }
+      #debug {
+        left: 600;
+      }
     </style>
   </head>
   <body>
@@ -53,16 +56,13 @@
 
         console.log(renderer.assetManager);
 
-        renderer.scene.camera.transform.setTranslation(8, 8, 8.001);
-        renderer.scene.camera.transform.setRotation(-90, 0, 0, false);
-
         let currentLevel = new LevelManager(0, currentPlayerConfig);
 
         function main() {
           prepDebugCanvas();
           currentLevel.update();
           currentLevel.display(renderer);
-          //currentLevel.debugDisplay();
+          currentLevel.debugDisplay();
 
           requestAnimationFrame(main);
           renderer.render();

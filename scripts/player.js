@@ -57,6 +57,8 @@ var Player = (function () {
 
       this.speed = 0.1;
       this.dir = { x: 0, y: 0 };
+      this.rotation = 0;
+      this.camHeight = 2;
     }
     handleUserInput() {
       this.dir.x = 0;
@@ -74,6 +76,21 @@ var Player = (function () {
       if (events.KeyD) {
         this.dir.x = 1;
       }
+      if (events.ArrowLeft) {
+        this.rotation += 0.05;
+      }
+      if (events.ArrowRight) {
+        this.rotation -= 0.05;
+      }
+      if (events.ArrowDown) {
+        this.camHeight -= 0.05;
+        if (this.camHeight < 1.5) {
+          this.camHeight = 1.5;
+        }
+      }
+      if (events.ArrowUp) {
+        this.camHeight += 0.05;
+      }
     }
     move(grid) {
       if (this.dir.x != 0 && this.dir.y != 0) {
@@ -81,10 +98,16 @@ var Player = (function () {
         this.dir.y *= 0.71;
       }
 
-      this.pos.x += this.dir.x * this.speed;
+      let cos = Math.cos(this.rotation);
+      let sin = Math.sin(this.rotation);
+
+      let worldDirX = this.dir.x * cos - this.dir.y * sin;
+      let worldDirY = this.dir.x * sin - this.dir.y * cos;
+
+      this.pos.x += worldDirX * this.speed;
       handleGridCollision(grid, this, "x");
 
-      this.pos.y += this.dir.y * this.speed;
+      this.pos.y += worldDirY * this.speed;
       handleGridCollision(grid, this, "y");
 
       this.centerX = this.pos.x + this.size.w / 2;
