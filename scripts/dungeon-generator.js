@@ -88,6 +88,7 @@ function generatePotentialDungeon(level) {
     end: false,
     start: true,
     cleared: false,
+    hasComputer: false,
   };
 
   let queue = [startingRoom];
@@ -122,6 +123,7 @@ function generatePotentialDungeon(level) {
         end: false,
         start: false,
         cleared: false,
+        hasComputer: Math.random() < 0.5,
       };
       queue.push(neighborLoc);
       addedRoom = true;
@@ -131,6 +133,7 @@ function generatePotentialDungeon(level) {
     }
   }
   grid[queue[queue.length - 1]].type = "boss";
+  grid[queue[queue.length - 1]].hasComputer = true;
 
   return { rooms: queue.length, numRoomsNeeded, grid };
 }

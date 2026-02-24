@@ -163,7 +163,7 @@ const currentPlayerConfig = {
     firing: {
       type: "burst",
       frequency: 240,
-      burstNumber: 3,
+      burstNumber: 10,
       burstPause: 30,
     },
     projectile: {
@@ -295,6 +295,7 @@ class LevelManager {
 
     this.playerAttack = false;
     this.doorsOpen = false;
+    this.computerAdded = false;
 
     this.gridRenderComponentList = [];
     this.initializedRoomRenderComponents = false;
@@ -315,24 +316,42 @@ class LevelManager {
     this.enemies.push(
       new Enemy(
         enemyConfigs[Math.floor(Math.random() * enemyConfigs.length)],
-        { x: eX, y: eY },
+        { x: eX + 0.5, y: eY + 0.5 },
         this.enemyProjectiles,
       ),
     );
+  }
+  spawnComputer() {
+    let eX = 0;
+    let eY = 0;
+    while (getGridTile(this.roomGrid, eX, eY).type != "") {
+      eX = Math.floor(Math.random() * GRID_WIDTH);
+      eY = Math.floor(Math.random() * GRID_HEIGHT);
+    }
+
+    let tile = getGridTile(this.roomGrid, eX, eY);
+
+    tile.type = "computer";
+    tile.computerUsed = false;
+    tile.blocksLOS = true;
+    tile.blocksMovement = true;
   }
 
   switchRooms(direction) {
     this.currentRoom += direction;
     this.roomGrid = this.dungeon[this.currentRoom].roomGrid;
 
-    if (direction == -1) this.player.pos.x = GRID_WIDTH - 1;
-    else if (direction == 1) this.player.pos.x = 1;
-    else if (direction == -10) this.player.pos.y = GRID_HEIGHT - 1;
-    else if (direction == 10) this.player.pos.y = 1;
+    if (direction == -1)
+      this.player.pos.x = GRID_WIDTH - 1 - this.player.size.w / 2;
+    else if (direction == 1) this.player.pos.x = 1 + this.player.size.w / 2;
+    else if (direction == -10)
+      this.player.pos.y = GRID_HEIGHT - 1 - this.player.size.h / 2;
+    else if (direction == 10) this.player.pos.y = 1 + this.player.size.h / 2;
 
     if (!this.dungeon[this.currentRoom].cleared) {
       this.spawnEnemies();
       this.playerAttack = true;
+      this.computerAdded = false;
     }
 
     this.initializedRoomRenderComponents = false;
@@ -479,6 +498,10 @@ class LevelManager {
             }
           }
         }
+        if (!this.computerAdded && this.dungeon[this.currentRoom].hasComputer) {
+          this.spawnComputer();
+          this.computerAdded = true;
+        }
       }
 
       if (Math.floor(this.player.pos.x) == 0) {
@@ -509,7 +532,9 @@ class LevelManager {
                 ? val.blocksMovement
                   ? "#000000FF"
                   : "#88888880"
-                : "#00000000",
+                : val.type == "computer"
+                  ? "#FFFF00"
+                  : "#00000000",
         debugStroke: "#EEEEEE",
       };
     });
@@ -613,6 +638,7 @@ class LevelManager {
       this.initializedRoomRenderComponents = true;
     }
     renderer.scene.removeComponentsByName("door");
+    renderer.scene.removeComponentsByName("computer");
     for (let i in this.roomGrid) {
       let tile = this.roomGrid[i];
       if (tile.type == "door") {
@@ -647,6 +673,17 @@ class LevelManager {
             "door",
           );
         }
+      } else if (tile.type == "computer") {
+        let loc = getTileLocation(i);
+        let translation = [loc.x + 0.5, 0.5, loc.y + 0.5];
+        renderer.scene.addComponent(
+          new RenderComponent(
+            "models/ComputerTower",
+            { translation },
+            { strength: 5, color: [1.0, 0.7, 1.0] },
+          ),
+          "computer",
+        );
       }
     }
 
