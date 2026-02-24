@@ -14,6 +14,7 @@
                 type: "constant" | "burst",
                 frequency: number,
                 burstNumber: number,
+                singlesBurst: number,
                 burstPause: number,
               },
               projectile: {
@@ -63,9 +64,21 @@ const upgrades = {
     },
     {
       text: "Decrease firing delay by 1%",
-      attribute: "attack.firing.frequncy",
+      attribute: "attack.firing.frequency",
       operator: "multiply",
       value: 0.99,
+    },
+    {
+      text: "Restore lives by 1",
+      attribute: "hearts",
+      operator: "add",
+      value: 1,
+    },
+    {
+      text: "Increase number of bullets fired by 1",
+      attribute: "attack.spatial.number",
+      operator: "add",
+      value: 1,
     },
   ],
   normal: [
@@ -76,10 +89,10 @@ const upgrades = {
       value: 1.05,
     },
     {
-      text: "Increase number of bullets fired by 1",
+      text: "Increase number of bullets fired by 3",
       attribute: "attack.spatial.number",
       operator: "add",
-      value: 1,
+      value: 3,
     },
     {
       text: "Decrease firing delay by 5%",
@@ -92,6 +105,18 @@ const upgrades = {
       attribute: "attack.projectile.speed",
       operator: "multiply",
       value: 1.05,
+    },
+    {
+      text: "Increase lives capacity by 1",
+      attribute: "totalHearts",
+      operator: "add",
+      value: 1,
+    },
+    {
+      text: "Restore lives by 3",
+      attribute: "hearts",
+      operator: "add",
+      value: 3,
     },
   ],
   boss: [
@@ -109,13 +134,19 @@ const upgrades = {
     },
     {
       text: "Increase burst number by 1",
-      attribute: "firing.burstNumber",
+      attribute: "attack.firing.burstNumber",
       operator: "add",
       value: 1,
     },
     {
-      text: "Increase number of bullets fired by 2",
+      text: "Increase number of bullets fired by 5",
       attribute: "attack.spatial.number",
+      operator: "add",
+      value: 3,
+    },
+    {
+      text: "Increase lives capacity by 3",
+      attribute: "totalHearts",
       operator: "add",
       value: 3,
     },
@@ -174,6 +205,28 @@ function pickUpgrades(roomType) {
 
   return u;
 }
+function applyUpgrade(upgrade, playerConfig, player) {
+  let attribute = upgrade.attribute.split(".");
+  let parentObj = playerConfig;
+  for (let i in attribute) {
+    if (i != attribute.length - 1) parentObj = parentObj[attribute[i]];
+  }
+  switch (upgrade.operator) {
+    case "add":
+      parentObj[attribute[attribute.length - 1]] += upgrade.value;
+      break;
+    case "multiply":
+      parentObj[attribute[attribute.length - 1]] *= upgrade.value;
+      break;
+    case "equals":
+      parentObj[attribute[attribute.length - 1]] = upgrade.value;
+      break;
+  }
+  console.log(playerConfig);
+  player.backupTiming = structuredClone(playerConfig.attack.timing);
+  player.attack.timing = structuredClone(playerConfig.attack.timing);
+  if (player.hearts > player.totalHearts) player.hearts = player.totalHearts;
+}
 
 function upgradeScreen(selectedUpgrades, selectUpgradeSlot) {
   const canvas = document.getElementById("overlay");
@@ -208,7 +261,7 @@ function upgradeScreen(selectedUpgrades, selectUpgradeSlot) {
         250 + 72 * i + 36,
       );
       if (mousePressed) {
-        selectUpgradeSlot = selectedUpgrades[i];
+        selectUpgradeSlot.upgrade = selectedUpgrades[i];
         return true;
       }
     } else {

@@ -123,7 +123,7 @@ function generatePotentialDungeon(level) {
         end: false,
         start: false,
         cleared: false,
-        hasComputer: Math.random() < 0.5,
+        hasComputer: Math.random() < 0.7,
       };
       queue.push(neighborLoc);
       addedRoom = true;

@@ -39,9 +39,8 @@ class AttackHandler {
   constructor(config, position, projectileArrayRef) {
     // Weapon configuration
     this.type = config.attack.type;
-    this.spatial = structuredClone(config.attack.spatial);
-    this.firing = structuredClone(config.attack.firing);
-    this.projectile = structuredClone(config.attack.projectile);
+    this.spatial = config.attack.spatial;
+    this.projectile = config.attack.projectile;
     this.timing = structuredClone(config.attack.timing);
 
     // Weapon states: ready, windup, fire, cooldown

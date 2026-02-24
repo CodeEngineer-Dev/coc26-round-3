@@ -42,7 +42,7 @@ var Player = (function () {
         r: 0.4,
       };
 
-      this.firing = structuredClone(config.attack.firing);
+      this.firing = config.attack.firing;
 
       this.attack = new AttackHandler(config, this.pos, projectileArray);
       this.backupTiming = structuredClone(config.attack.timing);
@@ -54,8 +54,9 @@ var Player = (function () {
       this.burstTimer = 0;
 
       this.hearts = config.hearts;
+      this.totalHearts = config.hearts;
 
-      this.speed = 0.05;
+      this.speed = config.speed;
       this.dir = { x: 0, y: 0 };
       this.rotation = Math.PI / 2;
       this.camHeight = 2;
@@ -146,7 +147,17 @@ var Player = (function () {
             if (this.attack.tryAttack())
               this.attackTimer = this.firing.frequency;
           } else if (this.firing.type == "burst") {
-            if (this.shotsThisRound < this.firing.burstNumber) {
+            console.log(
+              this.attack.type,
+              this.shotsThisRound,
+              this.attack.spatial.number,
+            );
+            if (
+              (this.attack.type != "single" &&
+                this.shotsThisRound < this.firing.burstNumber) ||
+              (this.attack.type == "single" &&
+                this.shotsThisRound < this.attack.spatial.number)
+            ) {
               if (this.attack.tryAttack()) {
                 this.shotsThisRound++;
                 this.attack.timing.windup = 0;

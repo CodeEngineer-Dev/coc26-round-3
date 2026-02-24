@@ -151,6 +151,8 @@ const enemyConfigs = [
 
 const currentPlayerConfig = {
   hearts: 3,
+  totalHearts: 3,
+  speed: 0.05,
   attack: {
     type: "bullet",
     spatial: {
@@ -163,7 +165,7 @@ const currentPlayerConfig = {
     firing: {
       type: "burst",
       frequency: 240,
-      burstNumber: 10,
+      burstNumber: 1,
       burstPause: 30,
     },
     projectile: {
@@ -172,8 +174,8 @@ const currentPlayerConfig = {
       damage: 20,
     },
     timing: {
-      windup: 0,
-      cooldown: 0,
+      windup: 20,
+      cooldown: 20,
     },
   },
 };
@@ -302,6 +304,8 @@ class LevelManager {
     this.initializedPlayerRenderComponent = false;
     this.playerRenderComponent;
 
+    this.upgrade = false;
+
     this.cameraRot = 0;
     this.cameraRad = 2;
   }
@@ -334,7 +338,7 @@ class LevelManager {
     tile.type = "computer";
     tile.computerUsed = false;
     tile.blocksLOS = true;
-    tile.blocksMovement = true;
+    tile.blocksMovement = false;
   }
 
   switchRooms(direction) {
@@ -358,6 +362,7 @@ class LevelManager {
   }
 
   update() {
+    this.upgrade = false;
     if (this.enemies.length == 0) this.playerAttack = false;
     this.player.handleUserInput();
     this.player.update(this.roomGrid, this.enemies, this.playerAttack);
@@ -400,7 +405,12 @@ class LevelManager {
 
       for (let i = minX; i <= maxX; i++) {
         for (let j = minY; j <= maxY; j++) {
-          getGridTile(this.roomGrid, i, j).entitiesContained.push(this.player);
+          let gridTile = getGridTile(this.roomGrid, i, j);
+          gridTile.entitiesContained.push(this.player);
+          if (gridTile.type == "computer" && gridTile.computerUsed == false) {
+            gridTile.computerUsed = true;
+            this.upgrade = true;
+          }
         }
       }
     }
@@ -676,14 +686,26 @@ class LevelManager {
       } else if (tile.type == "computer") {
         let loc = getTileLocation(i);
         let translation = [loc.x + 0.5, 0.5, loc.y + 0.5];
-        renderer.scene.addComponent(
-          new RenderComponent(
-            "models/ComputerTower",
-            { translation },
-            { strength: 5, color: [1.0, 0.7, 1.0] },
-          ),
-          "computer",
-        );
+
+        if (tile.computerUsed == false) {
+          renderer.scene.addComponent(
+            new RenderComponent(
+              "models/ComputerTower",
+              { translation },
+              { strength: 5, color: [1.0, 0.7, 1.0] },
+            ),
+            "computer",
+          );
+        } else {
+          renderer.scene.addComponent(
+            new RenderComponent(
+              "models/ComputerTower",
+              { translation },
+              { strength: 0.2, color: [1.0, 0.7, 1.0] },
+            ),
+            "computer",
+          );
+        }
       }
     }
 

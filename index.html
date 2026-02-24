@@ -52,29 +52,47 @@
     <script type>
       (function () {
         const renderer = new Renderer("render");
+        const overlay = document.getElementById("overlay");
+        const overlay_ctx = overlay.getContext("2d");
 
         renderer.assetManager.loadFromBase64("models", models);
+
+        let currentState = "gameplay";
+        let selectedUpgrades;
+        let nextUpgrade = {};
 
         console.log(renderer.assetManager);
 
         let currentLevel = new LevelManager(0, currentPlayerConfig);
 
-        let currentState = "gameplay";
-        let selectedUpgrades;
-        let nextUpgrade;
-
         function main() {
           prepDebugCanvas();
 
           if (currentState == "gameplay") {
+            overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
             currentLevel.update();
             currentLevel.display(renderer);
             currentLevel.debugDisplay();
+
+            if (currentLevel.upgrade) {
+              currentLevel.upgrade = false;
+              currentState = "upgrade";
+              selectedUpgrades = pickUpgrades(
+                currentLevel.dungeon[currentLevel.currentRoom].boss
+                  ? "boss"
+                  : "normal",
+              );
+            }
             //currentState = "upgrade";
-            //selectedUpgrades = pickUpgrades("normal");
+            //selectedUpgrades = pickUpgrades("boss");
           } else if (currentState == "upgrade") {
             if (upgradeScreen(selectedUpgrades, nextUpgrade)) {
               currentState = "gameplay";
+              applyUpgrade(
+                nextUpgrade.upgrade,
+                currentPlayerConfig,
+                currentLevel.player,
+              );
             }
           }
           renderer.render();
