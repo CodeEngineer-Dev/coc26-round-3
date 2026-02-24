@@ -1,3 +1,4 @@
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -57,34 +58,90 @@
 
         renderer.assetManager.loadFromBase64("models", models);
 
-        let currentState = "gameplay";
+        let heartBlob = base64ToBlob(heartBase64, "image/png");
+        let deadHeartBlob = base64ToBlob(lostHeartBase64, "image/png");
+        let titleBlob = base64ToBlob(titleImg, "image/png");
+
+        let textures = {
+          heart: createPlaceholderTexture(),
+          lostHeart: createPlaceholderTexture(),
+          title: createPlaceholderTexture(),
+        };
+
+        Promise.all([
+          createImageBitmap(heartBlob),
+          createImageBitmap(deadHeartBlob),
+          createImageBitmap(titleBlob),
+        ]).then((images) => {
+          textures.heart = images[0];
+          textures.lostHeart = images[1];
+          textures.title = images[2];
+        });
+
+        let damageEff = 0;
+
+        let currentState = "title";
         let selectedUpgrades;
         let nextUpgrade = {};
 
+        this.clickTransition = 0;
+
         console.log(renderer.assetManager);
 
-        let currentLevel = new LevelManager(0, currentPlayerConfig);
+        let levelNumber = 0;
+        let currentLevel;
 
         function main() {
           prepDebugCanvas();
+          overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
 
           if (currentState == "gameplay") {
-            overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
             currentLevel.update();
             currentLevel.display(renderer);
+
+            for (let i = 0; i < currentLevel.player.totalHearts; i++) {
+              if (i < currentLevel.player.hearts) {
+                overlay_ctx.drawImage(textures.heart, 25 + i * 40, 25, 50, 50);
+              } else {
+                overlay_ctx.drawImage(
+                  textures.lostHeart,
+                  25 + i * 40,
+                  25,
+                  50,
+                  50,
+                );
+              }
+            }
+
+            if (damageEff > 0) {
+              damageEff--;
+              overlay_ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+              overlay_ctx.fillRect(0, 0, overlay.width, overlay.height);
+            }
+            if (currentLevel.player.justDamaged) {
+              damageEff = 20;
+              if (currentLevel.player.hearts == 0) currentState = "lost";
+            }
+            overlay_ctx.fillStyle = "rgba(255, 255, 255, 1)";
+            overlay_ctx.font = "36px sans-serif";
+            overlay_ctx.textAlign = "right";
+            overlay_ctx.fillText("LVL: " + levelNumber, overlay.width - 50, 60);
+
             currentLevel.debugDisplay();
 
             if (currentLevel.upgrade) {
               currentLevel.upgrade = false;
               currentState = "upgrade";
               selectedUpgrades = pickUpgrades(
-                currentLevel.dungeon[currentLevel.currentRoom].boss
-                  ? "boss"
-                  : "normal",
+                currentLevel.dungeon[currentLevel.currentRoom].type,
               );
+              console.log(currentLevel.dungeon[currentLevel.currentRoom]);
             }
-            //currentState = "upgrade";
-            //selectedUpgrades = pickUpgrades("boss");
+
+            if (currentLevel.finishedLevel) {
+              levelNumber++;
+              currentLevel = new LevelManager(levelNumber, currentPlayerConfig);
+            }
           } else if (currentState == "upgrade") {
             if (upgradeScreen(selectedUpgrades, nextUpgrade)) {
               currentState = "gameplay";
@@ -94,8 +151,81 @@
                 currentLevel.player,
               );
             }
+          } else if (currentState == "title") {
+            overlay_ctx.drawImage(
+              textures.title,
+              0,
+              0,
+              overlay.width,
+              overlay.height,
+            );
+            overlay_ctx.fillStyle = "rgba(255, 255, 255, 1)";
+            overlay_ctx.font = "24px sans-serif";
+            overlay_ctx.textAlign = "center";
+            overlay_ctx.fillText("click to begin", overlay.width / 2, 500);
+
+            if (mousePressed && clickTransition < 0) {
+              currentState = "how";
+              clickTransition = 150;
+            }
+          } else if (currentState == "how") {
+            overlay_ctx.fillStyle = "rgba(255, 255, 255, 1)";
+            overlay_ctx.font = "24px sans-serif";
+            overlay_ctx.textAlign = "center";
+            overlay_ctx.fillText("WASD to move.", overlay.width / 2, 100);
+            overlay_ctx.fillText(
+              "Arrow keys to control camera.",
+              overlay.width / 2,
+              140,
+            );
+            overlay_ctx.fillText(
+              "Dodge the enemies. You autoshoot.",
+              overlay.width / 2,
+              180,
+            );
+            overlay_ctx.fillText(
+              "Upgrade at purple computer towers.",
+              overlay.width / 2,
+              260,
+            );
+            overlay_ctx.fillText(
+              "Advance levels at yellow computer towers.",
+              overlay.width / 2,
+              300,
+            );
+            overlay_ctx.fillText(
+              "Get as far as you can.",
+              overlay.width / 2,
+              340,
+            );
+
+            overlay_ctx.fillText("Click to begin.", overlay.width / 2, 500);
+
+            if (mousePressed && clickTransition < 0) {
+              currentState = "gameplay";
+              clickTransition = 150;
+              currentLevel = new LevelManager(levelNumber, currentPlayerConfig);
+            }
+          } else if (currentState == "lost") {
+            overlay_ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+            overlay_ctx.fillRect(0, 0, overlay.width, overlay.height);
+
+            overlay_ctx.font = "36px sans-serif";
+            overlay_ctx.fillStyle = "rgba(255, 255, 255, 1)";
+            overlay_ctx.textAlign = "center";
+            overlay_ctx.fillText(
+              "You ran out of lives.",
+              overlay.width / 2,
+              200,
+            );
+            overlay_ctx.fillText(
+              "You made it to level " + levelNumber,
+              overlay.width / 2,
+              260,
+            );
           }
           renderer.render();
+          clickTransition--;
           requestAnimationFrame(main);
         }
         requestAnimationFrame(main);

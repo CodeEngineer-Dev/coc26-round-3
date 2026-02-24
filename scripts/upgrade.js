@@ -212,20 +212,27 @@ var [pickUpgrades, applyUpgrade, upgradeScreen] = (function () {
     for (let i in attribute) {
       if (i != attribute.length - 1) parentObj = parentObj[attribute[i]];
     }
-    switch (upgrade.operator) {
-      case "add":
-        parentObj[attribute[attribute.length - 1]] += upgrade.value;
-        break;
-      case "multiply":
-        parentObj[attribute[attribute.length - 1]] *= upgrade.value;
-        break;
-      case "equals":
-        parentObj[attribute[attribute.length - 1]] = upgrade.value;
-        break;
+
+    if (attribute[0] == "hearts") {
+      player.hearts += upgrade.value;
+    } else {
+      switch (upgrade.operator) {
+        case "add":
+          parentObj[attribute[attribute.length - 1]] += upgrade.value;
+          break;
+        case "multiply":
+          parentObj[attribute[attribute.length - 1]] *= upgrade.value;
+          break;
+        case "equals":
+          parentObj[attribute[attribute.length - 1]] = upgrade.value;
+          break;
+      }
     }
     console.log(playerConfig);
     player.backupTiming = structuredClone(playerConfig.attack.timing);
     player.attack.timing = structuredClone(playerConfig.attack.timing);
+    player.totalHearts = playerConfig.totalHearts;
+    player.speed = playerConfig.speed;
     if (player.hearts > player.totalHearts) player.hearts = player.totalHearts;
   }
 

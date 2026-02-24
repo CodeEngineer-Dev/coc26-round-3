@@ -169,7 +169,10 @@ var Enemy = (function () {
         h: config.size.h,
         r: config.size.r,
       };
-      this.mesh = "models/Enemy";
+      this.mesh =
+        config.attack.spatial.type == "spiral"
+          ? "models/Enemy1"
+          : "models/Enemy2";
       this.movement = new MovementHandler(config, this.pos, this.size);
       this.firing = structuredClone(config.attack.firing);
       this.engagement = structuredClone(config.engagement);

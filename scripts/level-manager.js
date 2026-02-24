@@ -9,6 +9,116 @@ var roomConfigs = [
       h: 2,
     },
   },
+  {
+    type: "symmetric",
+    symmetryType: "xy",
+    wallNumber: 3,
+    holeNumber: 5,
+    clusterSize: {
+      w: 2,
+      h: Math.round(1 + Math.random() * 1),
+    },
+  },
+  {
+    type: "symmetric",
+    symmetryType: "x",
+    wallNumber: 2,
+    holeNumber: 3,
+    clusterSize: {
+      w: 1,
+      h: 5,
+    },
+  },
+  {
+    type: "symmetric",
+    symmetryType: "x",
+    wallNumber: 5,
+    holeNumber: 6,
+    clusterSize: {
+      w: 3,
+      h: 1,
+    },
+  },
+  {
+    type: "symmetric",
+    symmetryType: "y",
+    wallNumber: 6,
+    holeNumber: 1,
+    clusterSize: {
+      w: 1,
+      h: 1,
+    },
+  },
+  {
+    type: "symmetric",
+    symmetryType: "y",
+    wallNumber: 0,
+    holeNumber: 0,
+    clusterSize: {
+      w: 1,
+      h: 1,
+    },
+  },
+  {
+    type: "symmetric",
+    symmetryType: "y",
+    wallNumber: 0,
+    holeNumber: 5,
+    clusterSize: {
+      w: 1,
+      h: 3,
+    },
+  },
+  {
+    type: "symmetric",
+    symmetryType: "xy",
+    wallNumber: 2,
+    holeNumber: 1,
+    clusterSize: {
+      w: 2,
+      h: 2,
+    },
+  },
+  {
+    type: "symmetric",
+    symmetryType: "x",
+    wallNumber: 5,
+    holeNumber: 7,
+    clusterSize: {
+      w: 1,
+      h: 2,
+    },
+  },
+  {
+    type: "symmetric",
+    symmetryType: "y",
+    wallNumber: 5,
+    holeNumber: 3,
+    clusterSize: {
+      w: 5,
+      h: 1,
+    },
+  },
+  {
+    type: "symmetric",
+    symmetryType: "xy",
+    wallNumber: 3,
+    holeNumber: 1,
+    clusterSize: {
+      w: 2,
+      h: 3,
+    },
+  },
+  {
+    type: "symmetric",
+    symmetryType: "x&y",
+    wallNumber: 7,
+    holeNumber: 3,
+    clusterSize: {
+      w: 1,
+      h: 1,
+    },
+  },
 ];
 /*
   Configuration options for an enemy:
@@ -147,6 +257,321 @@ var enemyConfigs = [
     tag: "string",
     health: 100,
   },
+  {
+    movement: {
+      type: "orbit",
+      speed: 0.02,
+    },
+    size: {
+      w: 0.4,
+      h: 0.4,
+      r: 0.25,
+    },
+    engagement: {
+      maxDist: 3.8,
+      minDist: 0.5,
+      preferredDist: 1,
+      requiresLOS: true,
+    },
+    attack: {
+      type: "bullet",
+      spatial: {
+        type: "shotgun",
+        number: 5,
+        aimed: true,
+        spiralPause: 2,
+        shotgunAngleRange: Math.PI / 4,
+      },
+      firing: {
+        type: "burst",
+        frequency: 500,
+        burstNumber: 5,
+        burstPause: 20,
+      },
+      projectile: {
+        speed: 0.06,
+        modifiers: "none",
+        damage: 1,
+      },
+      timing: {
+        windup: 55,
+        cooldown: 40,
+      },
+    },
+    tag: "close-shooter",
+    health: 90,
+    difficulty: "easy",
+  },
+  {
+    movement: {
+      type: "wander",
+      speed: 0.015,
+    },
+    size: {
+      w: 0.7,
+      h: 0.7,
+      r: 0.37,
+    },
+    engagement: {
+      maxDist: 5,
+      minDist: 2,
+      preferredDist: 2.5,
+      requiresLOS: true,
+    },
+    attack: {
+      type: "bullet",
+      spatial: {
+        type: "spiral",
+        number: 8,
+        aimed: true,
+        spiralPause: 3,
+        shotgunAngleRange: Math.PI / 4,
+      },
+      firing: {
+        type: "burst",
+        frequency: 200,
+        burstNumber: 5,
+        burstPause: 15,
+      },
+      projectile: {
+        speed: 0.04,
+        modifiers: "none",
+        damage: 1,
+      },
+      timing: {
+        windup: 60,
+        cooldown: 18,
+      },
+    },
+    tag: "wandering weirdo",
+    health: 100,
+    difficulty: "easy",
+  },
+  {
+    movement: {
+      type: "chase",
+      speed: 0.03,
+    },
+    size: {
+      w: 0.5,
+      h: 0.5,
+      r: 0.29,
+    },
+    engagement: {
+      maxDist: 4,
+      minDist: 2,
+      preferredDist: 3,
+      requiresLOS: true,
+    },
+    attack: {
+      type: "bullet",
+      spatial: {
+        type: "shotgun",
+        number: 4,
+        aimed: true,
+        spiralPause: 3,
+        shotgunAngleRange: Math.PI / 8,
+      },
+      firing: {
+        type: "burst",
+        frequency: 500,
+        burstNumber: 2,
+        burstPause: 30,
+      },
+      projectile: {
+        speed: 0.05,
+        modifiers: "none",
+        damage: 1,
+      },
+      timing: {
+        windup: 40,
+        cooldown: 22,
+      },
+    },
+    tag: "player chasing shotgun wielder",
+    health: 100,
+    difficulty: "easy",
+  },
+  {
+    movement: {
+      type: "chase",
+      speed: 0.03,
+    },
+    size: {
+      w: 0.5,
+      h: 0.5,
+      r: 0.29,
+    },
+    engagement: {
+      maxDist: 2,
+      minDist: 0.5,
+      preferredDist: 1,
+      requiresLOS: false,
+    },
+    attack: {
+      type: "bullet",
+      spatial: {
+        type: "shotgun",
+        number: 10,
+        aimed: true,
+        spiralPause: 3,
+        shotgunAngleRange: Math.PI / 8,
+      },
+      firing: {
+        type: "burst",
+        frequency: 10,
+        burstNumber: 5,
+        burstPause: 10,
+      },
+      projectile: {
+        speed: 0.05,
+        modifiers: "none",
+        damage: 1,
+      },
+      timing: {
+        windup: 30,
+        cooldown: 10,
+      },
+    },
+    tag: "Boss 1",
+    health: 400,
+    difficulty: "hard",
+  },
+  {
+    movement: {
+      type: "chase",
+      speed: 0.03,
+    },
+    size: {
+      w: 0.8,
+      h: 0.8,
+      r: 0.45,
+    },
+    engagement: {
+      maxDist: 3,
+      minDist: 1,
+      preferredDist: 1.5,
+      requiresLOS: false,
+    },
+    attack: {
+      type: "bullet",
+      spatial: {
+        type: "radial",
+        number: 20,
+        aimed: true,
+        spiralPause: 3,
+        shotgunAngleRange: Math.PI / 8,
+      },
+      firing: {
+        type: "burst",
+        frequency: 50,
+        burstNumber: 10,
+        burstPause: 30,
+      },
+      projectile: {
+        speed: 0.06,
+        modifiers: "none",
+        damage: 1,
+      },
+      timing: {
+        windup: 35,
+        cooldown: 20,
+      },
+    },
+    tag: "Boss 2",
+    health: 600,
+    difficulty: "hard",
+  },
+  {
+    movement: {
+      type: "orbit",
+      speed: 0.02,
+    },
+    size: {
+      w: 1,
+      h: 1,
+      r: 0.7,
+    },
+    engagement: {
+      maxDist: 4,
+      minDist: 2,
+      preferredDist: 2.8,
+      requiresLOS: false,
+    },
+    attack: {
+      type: "bullet",
+      spatial: {
+        type: "spiral",
+        number: 25,
+        aimed: true,
+        spiralPause: 2,
+        shotgunAngleRange: Math.PI / 8,
+      },
+      firing: {
+        type: "burst",
+        frequency: 10,
+        burstNumber: 10,
+        burstPause: 20,
+      },
+      projectile: {
+        speed: 0.05,
+        modifiers: "none",
+        damage: 1,
+      },
+      timing: {
+        windup: 40,
+        cooldown: 20,
+      },
+    },
+    tag: "Boss 3",
+    health: 1000,
+    difficulty: "hard",
+  },
+  {
+    movement: {
+      type: "orbit",
+      speed: 0.01,
+    },
+    size: {
+      w: 0.5,
+      h: 0.5,
+      r: 0.25,
+    },
+    engagement: {
+      maxDist: 5,
+      minDist: 1,
+      preferredDist: 1.7,
+      requiresLOS: true,
+    },
+    attack: {
+      type: "bullet",
+      spatial: {
+        type: "spiral",
+        number: 7,
+        aimed: true,
+        spiralPause: 4,
+        shotgunAngleRange: Math.PI / 8,
+      },
+      firing: {
+        type: "burst",
+        frequency: 400,
+        burstNumber: 10,
+        burstPause: 30,
+      },
+      projectile: {
+        speed: 0.05,
+        modifiers: "none",
+        damage: 1,
+      },
+      timing: {
+        windup: 63,
+        cooldown: 30,
+      },
+    },
+    tag: "high health enemy",
+    health: 300,
+    difficulty: "medium",
+  },
 ];
 
 var currentPlayerConfig = {
@@ -157,7 +582,7 @@ var currentPlayerConfig = {
     type: "bullet",
     spatial: {
       type: "single",
-      number: 6,
+      number: 1,
       aimed: true,
       spiralPause: 0,
       shotgunAngleRange: Math.PI / 4,
@@ -174,7 +599,7 @@ var currentPlayerConfig = {
       damage: 20,
     },
     timing: {
-      windup: 20,
+      windup: 60,
       cooldown: 20,
     },
   },
@@ -299,6 +724,7 @@ var LevelManager = (function () {
       this.playerAttack = false;
       this.doorsOpen = false;
       this.computerAdded = false;
+      this.spawnedPortal = false;
 
       this.gridRenderComponentList = [];
       this.initializedRoomRenderComponents = false;
@@ -309,6 +735,9 @@ var LevelManager = (function () {
 
       this.cameraRot = 0;
       this.cameraRad = 2;
+
+      this.finishedLevel = false;
+      this.levelNumber = levelNumber;
     }
 
     spawnEnemies() {
@@ -318,13 +747,15 @@ var LevelManager = (function () {
         eX = Math.floor(Math.random() * GRID_WIDTH);
         eY = Math.floor(Math.random() * GRID_HEIGHT);
       }
-      this.enemies.push(
-        new Enemy(
-          enemyConfigs[Math.floor(Math.random() * enemyConfigs.length)],
-          { x: eX + 0.5, y: eY + 0.5 },
-          this.enemyProjectiles,
-        ),
-      );
+      for (let i = 0; i < this.levelNumber + 1; i++) {
+        this.enemies.push(
+          new Enemy(
+            enemyConfigs[Math.floor(Math.random() * enemyConfigs.length)],
+            { x: eX + 0.5, y: eY + 0.5 },
+            this.enemyProjectiles,
+          ),
+        );
+      }
     }
     spawnComputer() {
       let eX = 0;
@@ -339,6 +770,20 @@ var LevelManager = (function () {
       tile.type = "computer";
       tile.computerUsed = false;
       tile.blocksLOS = true;
+      tile.blocksMovement = false;
+    }
+    spawnPortal() {
+      let eX = 0;
+      let eY = 0;
+      while (getGridTile(this.roomGrid, eX, eY).type != "") {
+        eX = Math.floor(Math.random() * GRID_WIDTH);
+        eY = Math.floor(Math.random() * GRID_HEIGHT);
+      }
+
+      let tile = getGridTile(this.roomGrid, eX, eY);
+
+      tile.type = "portal";
+      tile.blocksLOS = false;
       tile.blocksMovement = false;
     }
 
@@ -411,6 +856,8 @@ var LevelManager = (function () {
             if (gridTile.type == "computer" && gridTile.computerUsed == false) {
               gridTile.computerUsed = true;
               this.upgrade = true;
+            } else if (gridTile.type == "portal") {
+              this.finishedLevel = true;
             }
           }
         }
@@ -473,7 +920,8 @@ var LevelManager = (function () {
                 entity.size.r,
               )
             ) {
-              entity.health -= projectile.damage;
+              this.player.hearts--;
+              this.player.justDamaged = true;
               this.enemyProjectiles[i] =
                 this.enemyProjectiles[this.enemyProjectiles.length - 1];
               this.enemyProjectiles.pop();
@@ -485,13 +933,12 @@ var LevelManager = (function () {
       // Now handle removing dead enemies
       for (let i = this.enemies.length - 1; i > -1; i--) {
         if (this.enemies[i].health <= 0) {
-          console.log("------------------------------");
-          console.log("died");
           this.enemies[i] = this.enemies[this.enemies.length - 1];
           this.enemies.pop();
         }
       }
 
+      // Cleared level
       if (this.enemies.length == 0) {
         this.playerAttack = false;
         this.dungeon[this.currentRoom].cleared = true;
@@ -500,6 +947,7 @@ var LevelManager = (function () {
           this.enemyProjectiles.length == 0 &&
           this.playerProjectiles.length == 0
         ) {
+          // Open doors
           if (!this.doorsOpen) {
             for (let i of this.roomGrid) {
               if (i.type == "door") {
@@ -509,12 +957,22 @@ var LevelManager = (function () {
               }
             }
           }
+          // Spawn powerups
           if (
             !this.computerAdded &&
             this.dungeon[this.currentRoom].hasComputer
           ) {
             this.spawnComputer();
             this.computerAdded = true;
+          }
+
+          // If boss room, open portal
+          if (
+            this.dungeon[this.currentRoom].type == "boss" &&
+            !this.spawnedPortal
+          ) {
+            this.spawnPortal();
+            this.spawnedPortal = true;
           }
         }
 
@@ -547,8 +1005,10 @@ var LevelManager = (function () {
                     ? "#000000FF"
                     : "#88888880"
                   : val.type == "computer"
-                    ? "#FFFF00"
-                    : "#00000000",
+                    ? "#000000"
+                    : val.type == "portal"
+                      ? "#FFFF00"
+                      : "#00000000",
           debugStroke: "#EEEEEE",
         };
       });
@@ -575,6 +1035,7 @@ var LevelManager = (function () {
       ]);
 
       if (!this.initializedPlayerRenderComponent) {
+        renderer.scene.removeComponentsByName("player");
         this.playerRenderComponent = new RenderComponent(
           "models/Player",
           {
@@ -596,6 +1057,7 @@ var LevelManager = (function () {
           0,
         );
       }
+
       if (!this.initializedRoomRenderComponents) {
         renderer.scene.removeComponentsByName("levelTile");
         this.gridRenderComponentList.length = 0;
@@ -653,6 +1115,7 @@ var LevelManager = (function () {
       }
       renderer.scene.removeComponentsByName("door");
       renderer.scene.removeComponentsByName("computer");
+      renderer.scene.removeComponentsByName("portal");
       for (let i in this.roomGrid) {
         let tile = this.roomGrid[i];
         if (tile.type == "door") {
@@ -710,6 +1173,17 @@ var LevelManager = (function () {
               "computer",
             );
           }
+        } else if (tile.type == "portal") {
+          let loc = getTileLocation(i);
+          let translation = [loc.x + 0.5, 0.5, loc.y + 0.5];
+          renderer.scene.addComponent(
+            new RenderComponent(
+              "models/ComputerTower",
+              { translation },
+              { strength: 5, color: [1.0, 1.0, 0.5] },
+            ),
+            "portal",
+          );
         }
       }
 
@@ -736,6 +1210,7 @@ var LevelManager = (function () {
       }
 
       renderer.scene.removeComponentsByName("enemy");
+      renderer.scene.removeComponentsByName("enemyWindup");
       for (let i of this.enemies) {
         let renderComponent = new RenderComponent(
           i.mesh,
@@ -744,9 +1219,25 @@ var LevelManager = (function () {
           },
           { strength: 1, color: [0.5, 0.1, 0.1] },
         );
+
         renderComponent.transform.setRotation(0, i.rotation, 0);
         i.rotation += i.rotationSpeed;
         renderer.scene.addComponent(renderComponent, "enemy");
+
+        if (i.attack.currentState == "windup") {
+          let totalWindup = i.backupTiming.windup;
+          let currentTime = totalWindup - i.attack.timer;
+          let fraction = currentTime / totalWindup;
+
+          let renderComponent = new RenderComponent(
+            i.attack.spatial.type == "spiral" ? "models/Spiral" : "models/Ring",
+            {
+              translation: [i.pos.x, 0.01, i.pos.y],
+            },
+            { strength: fraction * 5, color: [1.0, 0.7, 0.7] },
+          );
+          renderer.scene.addComponent(renderComponent, "enemyWindup");
+        }
       }
     }
   }

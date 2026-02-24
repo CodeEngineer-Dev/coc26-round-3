@@ -53,13 +53,14 @@ var Player = (function () {
       this.shotsThisRound = 0;
       this.burstTimer = 0;
 
-      this.hearts = config.hearts;
-      this.totalHearts = config.hearts;
+      this.hearts = config.totalHearts;
+      this.totalHearts = config.totalHearts;
 
       this.speed = config.speed;
       this.dir = { x: 0, y: 0 };
       this.rotation = Math.PI / 2;
       this.camHeight = 2;
+      this.justDamaged = false;
     }
     handleUserInput() {
       this.dir.x = 0;
@@ -120,6 +121,7 @@ var Player = (function () {
       this.centerY = this.pos.y + this.size.h / 2;
     }
     update(grid, enemies, attackOn) {
+      this.justDamaged = false;
       let closestEnemyPos = { x: 0, y: 0 };
       let closestEnemyDistSq = Infinity;
       if (enemies.length > 0) {
@@ -148,14 +150,14 @@ var Player = (function () {
               this.attackTimer = this.firing.frequency;
           } else if (this.firing.type == "burst") {
             console.log(
-              this.attack.type,
+              this.attack.spatial.type,
               this.shotsThisRound,
               this.attack.spatial.number,
             );
             if (
-              (this.attack.type != "single" &&
+              (this.attack.spatial.type != "single" &&
                 this.shotsThisRound < this.firing.burstNumber) ||
-              (this.attack.type == "single" &&
+              (this.attack.spatial.type == "single" &&
                 this.shotsThisRound < this.attack.spatial.number)
             ) {
               if (this.attack.tryAttack()) {
