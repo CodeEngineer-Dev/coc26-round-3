@@ -55,7 +55,7 @@ var Player = (function () {
 
       this.hearts = config.hearts;
 
-      this.speed = 0.1;
+      this.speed = 0.05;
       this.dir = { x: 0, y: 0 };
       this.rotation = Math.PI / 2;
       this.camHeight = 2;

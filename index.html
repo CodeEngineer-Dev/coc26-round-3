@@ -47,6 +47,7 @@
     <script type src="scripts/room-generator.js"></script>
     <script type src="scripts/dungeon-generator.js"></script>
     <script type src="scripts/level-manager.js"></script>
+    <script type src="scripts/upgrade.js"></script>
 
     <script type>
       (function () {
@@ -58,14 +59,26 @@
 
         let currentLevel = new LevelManager(0, currentPlayerConfig);
 
+        let currentState = "gameplay";
+        let selectedUpgrades;
+        let nextUpgrade;
+
         function main() {
           prepDebugCanvas();
-          currentLevel.update();
-          currentLevel.display(renderer);
-          currentLevel.debugDisplay();
 
-          requestAnimationFrame(main);
+          if (currentState == "gameplay") {
+            currentLevel.update();
+            currentLevel.display(renderer);
+            currentLevel.debugDisplay();
+            //currentState = "upgrade";
+            //selectedUpgrades = pickUpgrades("normal");
+          } else if (currentState == "upgrade") {
+            if (upgradeScreen(selectedUpgrades, nextUpgrade)) {
+              currentState = "gameplay";
+            }
+          }
           renderer.render();
+          requestAnimationFrame(main);
         }
         requestAnimationFrame(main);
       })();
