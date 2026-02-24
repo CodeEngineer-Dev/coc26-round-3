@@ -1,249 +1,205 @@
-class MovementHandler {
-  constructor(config, position, size) {
-    this.type = config.movement.type;
-    this.speed = config.movement.speed;
+var Enemy = (function () {
+  class MovementHandler {
+    constructor(config, position, size) {
+      this.type = config.movement.type;
+      this.speed = config.movement.speed;
 
-    this.pos = position;
-    this.size = size;
+      this.pos = position;
+      this.size = size;
 
-    this.dir = {
-      x: 0,
-      y: 0,
-    };
-    this.vel = {
-      x: 0,
-      y: 0,
-    };
-    this.isCorrectingRadius = false;
-  }
-
-  calculateDistTo(pos) {
-    return Math.sqrt(
-      (pos.x - this.pos.x) * (pos.x - this.pos.x) +
-        (pos.y - this.pos.y) * (pos.y - this.pos.y),
-    );
-  }
-
-  blindChaseToward(pos, distance) {
-    let dist = distance || this.calculateDistTo(pos);
-    this.dir.x = (pos.x - this.pos.x) / dist;
-    this.dir.y = (pos.y - this.pos.y) / dist;
-  }
-  blindChaseAway(pos, distance) {
-    let dist = distance || this.calculateDistTo(pos);
-    this.dir.x = -(pos.x - this.pos.x) / dist;
-    this.dir.y = -(pos.y - this.pos.y) / dist;
-  }
-  blindChaseNeutral(pos, distance) {
-    this.dir.x = 0;
-    this.dir.y = 0;
-  }
-
-  // Used AI to help me work out how to do spirals correctly, esp. w/o using trig or angles.
-  blindOrbitToward(pos, distance) {
-    const SPIRAL_STRENGTH = 0.5;
-
-    let r = distance;
-    let rx = (pos.x - this.pos.x) / r;
-    let ry = (pos.y - this.pos.y) / r;
-
-    let px = -ry;
-    let py = rx;
-
-    this.dir.x = px + rx * SPIRAL_STRENGTH;
-    this.dir.y = py + ry * SPIRAL_STRENGTH;
-  }
-
-  blindOrbitAway(pos, distance) {
-    const SPIRAL_STRENGTH = 0.5;
-
-    let r = distance;
-    let rx = (pos.x - this.pos.x) / r;
-    let ry = (pos.y - this.pos.y) / r;
-
-    let px = -ry;
-    let py = rx;
-
-    this.dir.x = px - rx * SPIRAL_STRENGTH;
-    this.dir.y = py - ry * SPIRAL_STRENGTH;
-  }
-  blindOrbitNeutral(pos, distance) {
-    let r = distance;
-
-    let rx = (pos.x - this.pos.x) / r;
-    let ry = (pos.y - this.pos.y) / r;
-
-    let px = -ry;
-    let py = rx;
-
-    this.dir.x = px;
-    this.dir.y = py;
-  }
-
-  blindWander() {
-    const DIST = 5;
-    const R = 1;
-    let circleX = this.pos.x + this.dir.x * DIST;
-    let circleY = this.pos.y + this.dir.y * DIST;
-
-    let randomTheta = Math.random() * 2 * Math.PI;
-    let randomPointX = circleX + Math.cos(randomTheta) * R;
-    let randomPointY = circleY + Math.sin(randomTheta) * R;
-
-    let dist = this.calculateDistTo({
-      x: randomPointX,
-      y: randomPointY,
-    });
-    this.dir.x = (randomPointX - this.pos.x) / dist;
-    this.dir.y = (randomPointY - this.pos.y) / dist;
-  }
-
-  handleMovement(grid, dist, playerPos, prefDist, towards, away, neutral) {
-    if (this.isCorrectingRadius) {
-      if (floatsEqual(dist, prefDist, this.speed)) {
-        this.isCorrectingRadius = false;
-      } else {
-        if (dist > prefDist) {
-          towards(playerPos, dist);
-        } else if (dist < prefDist) {
-          away(playerPos, dist);
-        }
-      }
-    } else {
-      neutral(playerPos, dist);
-    }
-  }
-
-  update(grid, playerPos, engagement) {
-    let distToPlayer = this.calculateDistTo(playerPos);
-    if (
-      !this.isCorrectingRadius &&
-      (distToPlayer > engagement.maxDist || distToPlayer < engagement.minDist)
-    )
-      this.isCorrectingRadius = true;
-
-    if (this.type == "chase") {
-      this.handleMovement(
-        grid,
-        distToPlayer,
-        playerPos,
-        engagement.preferredDist,
-        (p, d) => this.blindChaseToward(p, d),
-        (p, d) => this.blindChaseAway(p, d),
-        (p, d) => this.blindChaseNeutral(p, d),
-      );
-    } else if (this.type == "orbit") {
-      // AI helped me work out how to do this correctly and efficiently.
-      // Avoids using trig functions and angle calculations. Very nice.
-
-      this.handleMovement(
-        grid,
-        distToPlayer,
-        playerPos,
-        engagement.preferredDist,
-        (p, d) => this.blindOrbitToward(p, d),
-        (p, d) => this.blindOrbitAway(p, d),
-        (p, d) => this.blindOrbitNeutral(p, d),
-      );
-    } else if (this.type == "wander") {
-      this.blindWander();
+      this.dir = {
+        x: 0,
+        y: 0,
+      };
+      this.vel = {
+        x: 0,
+        y: 0,
+      };
+      this.isCorrectingRadius = false;
     }
 
-    this.pos.x += this.dir.x * this.speed;
-    handleGridCollision(grid, this, "x");
+    calculateDistTo(pos) {
+      return Math.sqrt(
+        (pos.x - this.pos.x) * (pos.x - this.pos.x) +
+          (pos.y - this.pos.y) * (pos.y - this.pos.y),
+      );
+    }
 
-    this.pos.y += this.dir.y * this.speed;
-    handleGridCollision(grid, this, "y");
-  }
-}
+    blindChaseToward(pos, distance) {
+      let dist = distance || this.calculateDistTo(pos);
+      this.dir.x = (pos.x - this.pos.x) / dist;
+      this.dir.y = (pos.y - this.pos.y) / dist;
+    }
+    blindChaseAway(pos, distance) {
+      let dist = distance || this.calculateDistTo(pos);
+      this.dir.x = -(pos.x - this.pos.x) / dist;
+      this.dir.y = -(pos.y - this.pos.y) / dist;
+    }
+    blindChaseNeutral(pos, distance) {
+      this.dir.x = 0;
+      this.dir.y = 0;
+    }
 
-class Enemy {
-  constructor(config, position, projectileArray) {
-    this.pos = {
-      x: position.x,
-      y: position.y,
-    };
-    this.size = {
-      w: config.size.w,
-      h: config.size.h,
-      r: config.size.r,
-    };
-    this.mesh = "models/Enemy";
-    this.movement = new MovementHandler(config, this.pos, this.size);
-    this.firing = structuredClone(config.attack.firing);
-    this.engagement = structuredClone(config.engagement);
+    // Used AI to help me work out how to do spirals correctly, esp. w/o using trig or angles.
+    blindOrbitToward(pos, distance) {
+      const SPIRAL_STRENGTH = 0.5;
 
-    this.attack = new AttackHandler(config, this.pos, projectileArray);
-    this.backupTiming = structuredClone(config.attack.timing);
+      let r = distance;
+      let rx = (pos.x - this.pos.x) / r;
+      let ry = (pos.y - this.pos.y) / r;
 
-    this.projectileArrayRef = projectileArray;
-    this.health = config.health;
+      let px = -ry;
+      let py = rx;
 
-    this.debugFill = "#FF000080";
+      this.dir.x = px + rx * SPIRAL_STRENGTH;
+      this.dir.y = py + ry * SPIRAL_STRENGTH;
+    }
 
-    this.requiresLOS = config.engagement.requiresLOS;
-    this.currentState = "idle";
-    this.lastPos = { x: 0, y: 0 };
+    blindOrbitAway(pos, distance) {
+      const SPIRAL_STRENGTH = 0.5;
 
-    this.attackTimer = 0;
-    this.shotsThisRound = 0;
-    this.burstTimer = 0;
+      let r = distance;
+      let rx = (pos.x - this.pos.x) / r;
+      let ry = (pos.y - this.pos.y) / r;
 
-    this.rotation = 0;
-    this.rotationSpeed = 2;
-  }
-  update(grid, player) {
-    if (this.attack.currentState == "windup") this.debugFill = "#0000AA80";
-    else if (this.attack.currentState == "cooldown")
-      this.debugFill = "#00AA0080";
-    else this.debugFill = "#FF000080";
+      let px = -ry;
+      let py = rx;
 
-    if (!this.requiresLOS) {
-      this.movement.update(grid, player.pos, this.engagement);
-      this.attack.update(grid, player.pos);
+      this.dir.x = px - rx * SPIRAL_STRENGTH;
+      this.dir.y = py - ry * SPIRAL_STRENGTH;
+    }
+    blindOrbitNeutral(pos, distance) {
+      let r = distance;
 
-      if (this.attackTimer <= 0) {
-        if (this.firing.type == "constant") {
-          if (this.attack.tryAttack()) this.attackTimer = this.firing.frequency;
-        } else if (this.firing.type == "burst") {
-          if (this.shotsThisRound < this.firing.burstNumber) {
-            if (this.attack.tryAttack()) {
-              this.shotsThisRound++;
-              this.attack.timing.windup = 0;
-              this.attack.timing.cooldown = this.firing.burstPause;
-            }
-          } else {
-            this.attackTimer = this.firing.frequency;
-            this.shotsThisRound = 0;
-            this.attack.timing.windup = this.backupTiming.windup;
-          }
-        }
-      } else {
-        this.attackTimer--;
-      }
-    } else {
-      if (this.currentState == "idle") {
-        // check for line of sight
-        let angleToPlayer = Math.atan2(
-          player.pos.y - this.pos.y,
-          player.pos.x - this.pos.x,
-        );
-        let distSq =
-          (player.pos.x - this.pos.x) * (player.pos.x - this.pos.x) +
-          (player.pos.y - this.pos.y) * (player.pos.y - this.pos.y);
+      let rx = (pos.x - this.pos.x) / r;
+      let ry = (pos.y - this.pos.y) / r;
 
-        let ddaResults = DDA(grid, this.pos.x, this.pos.y, angleToPlayer);
-        if (ddaResults.hit) {
-          if (
-            ddaResults.distanceTraveled * ddaResults.distanceTraveled >
-            distSq
-          ) {
-            this.currentState = "aggressive";
-          }
+      let px = -ry;
+      let py = rx;
+
+      this.dir.x = px;
+      this.dir.y = py;
+    }
+
+    blindWander() {
+      const DIST = 5;
+      const R = 1;
+      let circleX = this.pos.x + this.dir.x * DIST;
+      let circleY = this.pos.y + this.dir.y * DIST;
+
+      let randomTheta = Math.random() * 2 * Math.PI;
+      let randomPointX = circleX + Math.cos(randomTheta) * R;
+      let randomPointY = circleY + Math.sin(randomTheta) * R;
+
+      let dist = this.calculateDistTo({
+        x: randomPointX,
+        y: randomPointY,
+      });
+      this.dir.x = (randomPointX - this.pos.x) / dist;
+      this.dir.y = (randomPointY - this.pos.y) / dist;
+    }
+
+    handleMovement(grid, dist, playerPos, prefDist, towards, away, neutral) {
+      if (this.isCorrectingRadius) {
+        if (floatsEqual(dist, prefDist, this.speed)) {
+          this.isCorrectingRadius = false;
         } else {
-          this.currentState = "aggressive";
+          if (dist > prefDist) {
+            towards(playerPos, dist);
+          } else if (dist < prefDist) {
+            away(playerPos, dist);
+          }
         }
-      } else if (this.currentState == "aggressive") {
+      } else {
+        neutral(playerPos, dist);
+      }
+    }
+
+    update(grid, playerPos, engagement) {
+      let distToPlayer = this.calculateDistTo(playerPos);
+      if (
+        !this.isCorrectingRadius &&
+        (distToPlayer > engagement.maxDist || distToPlayer < engagement.minDist)
+      )
+        this.isCorrectingRadius = true;
+
+      if (this.type == "chase") {
+        this.handleMovement(
+          grid,
+          distToPlayer,
+          playerPos,
+          engagement.preferredDist,
+          (p, d) => this.blindChaseToward(p, d),
+          (p, d) => this.blindChaseAway(p, d),
+          (p, d) => this.blindChaseNeutral(p, d),
+        );
+      } else if (this.type == "orbit") {
+        // AI helped me work out how to do this correctly and efficiently.
+        // Avoids using trig functions and angle calculations. Very nice.
+
+        this.handleMovement(
+          grid,
+          distToPlayer,
+          playerPos,
+          engagement.preferredDist,
+          (p, d) => this.blindOrbitToward(p, d),
+          (p, d) => this.blindOrbitAway(p, d),
+          (p, d) => this.blindOrbitNeutral(p, d),
+        );
+      } else if (this.type == "wander") {
+        this.blindWander();
+      }
+
+      this.pos.x += this.dir.x * this.speed;
+      handleGridCollision(grid, this, "x");
+
+      this.pos.y += this.dir.y * this.speed;
+      handleGridCollision(grid, this, "y");
+    }
+  }
+
+  class Enemy {
+    constructor(config, position, projectileArray) {
+      this.pos = {
+        x: position.x,
+        y: position.y,
+      };
+      this.size = {
+        w: config.size.w,
+        h: config.size.h,
+        r: config.size.r,
+      };
+      this.mesh = "models/Enemy";
+      this.movement = new MovementHandler(config, this.pos, this.size);
+      this.firing = structuredClone(config.attack.firing);
+      this.engagement = structuredClone(config.engagement);
+
+      this.attack = new AttackHandler(config, this.pos, projectileArray);
+      this.backupTiming = structuredClone(config.attack.timing);
+
+      this.projectileArrayRef = projectileArray;
+      this.health = config.health;
+
+      this.debugFill = "#FF000080";
+
+      this.requiresLOS = config.engagement.requiresLOS;
+      this.currentState = "idle";
+      this.lastPos = { x: 0, y: 0 };
+
+      this.attackTimer = 0;
+      this.shotsThisRound = 0;
+      this.burstTimer = 0;
+
+      this.rotation = 0;
+      this.rotationSpeed = 2;
+    }
+    update(grid, player) {
+      if (this.attack.currentState == "windup") this.debugFill = "#0000AA80";
+      else if (this.attack.currentState == "cooldown")
+        this.debugFill = "#00AA0080";
+      else this.debugFill = "#FF000080";
+
+      if (!this.requiresLOS) {
         this.movement.update(grid, player.pos, this.engagement);
         this.attack.update(grid, player.pos);
 
@@ -267,35 +223,81 @@ class Enemy {
         } else {
           this.attackTimer--;
         }
+      } else {
+        if (this.currentState == "idle") {
+          // check for line of sight
+          let angleToPlayer = Math.atan2(
+            player.pos.y - this.pos.y,
+            player.pos.x - this.pos.x,
+          );
+          let distSq =
+            (player.pos.x - this.pos.x) * (player.pos.x - this.pos.x) +
+            (player.pos.y - this.pos.y) * (player.pos.y - this.pos.y);
 
-        // check for line of sight
-        let angleToPlayer = Math.atan2(
-          player.pos.y - this.pos.y,
-          player.pos.x - this.pos.x,
-        );
-        let distSq =
-          (player.pos.x - this.pos.x) * (player.pos.x - this.pos.x) +
-          (player.pos.y - this.pos.y) * (player.pos.y - this.pos.y);
-
-        let ddaResults = DDA(grid, this.pos.x, this.pos.y, angleToPlayer);
-        if (ddaResults.hit) {
-          if (
-            ddaResults.distanceTraveled * ddaResults.distanceTraveled <
-            distSq
-          ) {
-            this.currentState = "searching";
-            this.lastPos.x = player.pos.x;
-            this.lastPos.y = player.pos.y;
+          let ddaResults = DDA(grid, this.pos.x, this.pos.y, angleToPlayer);
+          if (ddaResults.hit) {
+            if (
+              ddaResults.distanceTraveled * ddaResults.distanceTraveled >
+              distSq
+            ) {
+              this.currentState = "aggressive";
+            }
+          } else {
+            this.currentState = "aggressive";
           }
-        }
-      } else if (this.currentState == "searching") {
-        this.movement.update(grid, this.lastPos, {
-          minDist: 0.001,
-          maxDist: 0.01,
-          preferredDist: 0.005,
-        });
-        this.attack.update(grid, this.lastPos);
-        /*
+        } else if (this.currentState == "aggressive") {
+          this.movement.update(grid, player.pos, this.engagement);
+          this.attack.update(grid, player.pos);
+
+          if (this.attackTimer <= 0) {
+            if (this.firing.type == "constant") {
+              if (this.attack.tryAttack())
+                this.attackTimer = this.firing.frequency;
+            } else if (this.firing.type == "burst") {
+              if (this.shotsThisRound < this.firing.burstNumber) {
+                if (this.attack.tryAttack()) {
+                  this.shotsThisRound++;
+                  this.attack.timing.windup = 0;
+                  this.attack.timing.cooldown = this.firing.burstPause;
+                }
+              } else {
+                this.attackTimer = this.firing.frequency;
+                this.shotsThisRound = 0;
+                this.attack.timing.windup = this.backupTiming.windup;
+              }
+            }
+          } else {
+            this.attackTimer--;
+          }
+
+          // check for line of sight
+          let angleToPlayer = Math.atan2(
+            player.pos.y - this.pos.y,
+            player.pos.x - this.pos.x,
+          );
+          let distSq =
+            (player.pos.x - this.pos.x) * (player.pos.x - this.pos.x) +
+            (player.pos.y - this.pos.y) * (player.pos.y - this.pos.y);
+
+          let ddaResults = DDA(grid, this.pos.x, this.pos.y, angleToPlayer);
+          if (ddaResults.hit) {
+            if (
+              ddaResults.distanceTraveled * ddaResults.distanceTraveled <
+              distSq
+            ) {
+              this.currentState = "searching";
+              this.lastPos.x = player.pos.x;
+              this.lastPos.y = player.pos.y;
+            }
+          }
+        } else if (this.currentState == "searching") {
+          this.movement.update(grid, this.lastPos, {
+            minDist: 0.001,
+            maxDist: 0.01,
+            preferredDist: 0.005,
+          });
+          this.attack.update(grid, this.lastPos);
+          /*
         if (this.attackTimer <= 0) {
           if (this.firing.type == "constant") {
             if (this.attack.tryAttack())
@@ -318,27 +320,30 @@ class Enemy {
         }
           */
 
-        // check for line of sight
-        let angleToPlayer = Math.atan2(
-          player.pos.y - this.pos.y,
-          player.pos.x - this.pos.x,
-        );
-        let distSq =
-          (player.pos.x - this.pos.x) * (player.pos.x - this.pos.x) +
-          (player.pos.y - this.pos.y) * (player.pos.y - this.pos.y);
+          // check for line of sight
+          let angleToPlayer = Math.atan2(
+            player.pos.y - this.pos.y,
+            player.pos.x - this.pos.x,
+          );
+          let distSq =
+            (player.pos.x - this.pos.x) * (player.pos.x - this.pos.x) +
+            (player.pos.y - this.pos.y) * (player.pos.y - this.pos.y);
 
-        let ddaResults = DDA(grid, this.pos.x, this.pos.y, angleToPlayer);
-        if (ddaResults.hit) {
-          if (
-            ddaResults.distanceTraveled * ddaResults.distanceTraveled >
-            distSq
-          ) {
+          let ddaResults = DDA(grid, this.pos.x, this.pos.y, angleToPlayer);
+          if (ddaResults.hit) {
+            if (
+              ddaResults.distanceTraveled * ddaResults.distanceTraveled >
+              distSq
+            ) {
+              this.currentState = "aggressive";
+            }
+          } else {
             this.currentState = "aggressive";
           }
-        } else {
-          this.currentState = "aggressive";
         }
       }
     }
   }
-}
+
+  return Enemy;
+})();

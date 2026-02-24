@@ -30,7 +30,7 @@
           }
   */
 
-const upgrades = {
+var upgrades = {
   light: [
     {
       text: "Increase walking speed by 1%",
@@ -153,124 +153,128 @@ const upgrades = {
   ],
 };
 
-function pickRandom(array) {
-  return array[Math.floor(Math.random() * array.length)];
-}
-function pickUpgrades(roomType) {
-  let u;
-
-  if (roomType == "normal") {
-    let one;
-    let two;
-    let three;
-
-    while (one == two || two == three || one == three) {
-      one =
-        Math.random() < 0.9
-          ? pickRandom(upgrades.light)
-          : pickRandom(upgrades.normal);
-      two =
-        Math.random() < 0.8
-          ? pickRandom(upgrades.light)
-          : pickRandom(upgrades.normal);
-      three =
-        Math.random() < 0.7
-          ? pickRandom(upgrades.light)
-          : pickRandom(upgrades.normal);
-    }
-
-    u = [one, two, three];
-  } else if (roomType == "boss") {
-    let one;
-    let two;
-    let three;
-
-    while (one == two || two == three || one == three) {
-      one =
-        Math.random() < 0.9
-          ? pickRandom(upgrades.normal)
-          : pickRandom(upgrades.boss);
-      two =
-        Math.random() < 0.8
-          ? pickRandom(upgrades.normal)
-          : pickRandom(upgrades.boss);
-      three =
-        Math.random() < 0.7
-          ? pickRandom(upgrades.normal)
-          : pickRandom(upgrades.boss);
-    }
-
-    u = [one, two, three];
+var [pickUpgrades, applyUpgrade, upgradeScreen] = (function () {
+  function pickRandom(array) {
+    return array[Math.floor(Math.random() * array.length)];
   }
+  function pickUpgrades(roomType) {
+    let u;
 
-  return u;
-}
-function applyUpgrade(upgrade, playerConfig, player) {
-  let attribute = upgrade.attribute.split(".");
-  let parentObj = playerConfig;
-  for (let i in attribute) {
-    if (i != attribute.length - 1) parentObj = parentObj[attribute[i]];
-  }
-  switch (upgrade.operator) {
-    case "add":
-      parentObj[attribute[attribute.length - 1]] += upgrade.value;
-      break;
-    case "multiply":
-      parentObj[attribute[attribute.length - 1]] *= upgrade.value;
-      break;
-    case "equals":
-      parentObj[attribute[attribute.length - 1]] = upgrade.value;
-      break;
-  }
-  console.log(playerConfig);
-  player.backupTiming = structuredClone(playerConfig.attack.timing);
-  player.attack.timing = structuredClone(playerConfig.attack.timing);
-  if (player.hearts > player.totalHearts) player.hearts = player.totalHearts;
-}
+    if (roomType == "normal") {
+      let one;
+      let two;
+      let three;
 
-function upgradeScreen(selectedUpgrades, selectUpgradeSlot) {
-  const canvas = document.getElementById("overlay");
-  const ctx = canvas.getContext("2d");
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.font = "48px sans-serif";
-  ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
-  ctx.textAlign = "center";
-  ctx.fillText("UPGRADE UNLOCKED!", canvas.width / 2, 100);
-
-  ctx.font = "24px sans-serif";
-  ctx.fillText("choose one upgrade", canvas.width / 2, 200);
-
-  for (let i in selectedUpgrades) {
-    ctx.strokeStyle = "white";
-    ctx.strokeWidth = 2;
-    if (
-      mouseX > 50 &&
-      mouseX < canvas.width - 100 &&
-      mouseY > 250 + 72 * i &&
-      mouseY < 250 + 72 * i + 48
-    ) {
-      ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-      ctx.fillRect(50, 250 + 72 * i, canvas.width - 100, 48);
-      ctx.fillText(
-        selectedUpgrades[i].text,
-        canvas.width / 2,
-        250 + 72 * i + 36,
-      );
-      if (mousePressed) {
-        selectUpgradeSlot.upgrade = selectedUpgrades[i];
-        return true;
+      while (one == two || two == three || one == three) {
+        one =
+          Math.random() < 0.9
+            ? pickRandom(upgrades.light)
+            : pickRandom(upgrades.normal);
+        two =
+          Math.random() < 0.8
+            ? pickRandom(upgrades.light)
+            : pickRandom(upgrades.normal);
+        three =
+          Math.random() < 0.7
+            ? pickRandom(upgrades.light)
+            : pickRandom(upgrades.normal);
       }
-    } else {
-      ctx.strokeRect(50, 250 + 72 * i, canvas.width - 100, 48);
-      ctx.strokeText(
-        selectedUpgrades[i].text,
-        canvas.width / 2,
-        250 + 72 * i + 36,
-      );
+
+      u = [one, two, three];
+    } else if (roomType == "boss") {
+      let one;
+      let two;
+      let three;
+
+      while (one == two || two == three || one == three) {
+        one =
+          Math.random() < 0.9
+            ? pickRandom(upgrades.normal)
+            : pickRandom(upgrades.boss);
+        two =
+          Math.random() < 0.8
+            ? pickRandom(upgrades.normal)
+            : pickRandom(upgrades.boss);
+        three =
+          Math.random() < 0.7
+            ? pickRandom(upgrades.normal)
+            : pickRandom(upgrades.boss);
+      }
+
+      u = [one, two, three];
+    }
+
+    return u;
+  }
+  function applyUpgrade(upgrade, playerConfig, player) {
+    let attribute = upgrade.attribute.split(".");
+    let parentObj = playerConfig;
+    for (let i in attribute) {
+      if (i != attribute.length - 1) parentObj = parentObj[attribute[i]];
+    }
+    switch (upgrade.operator) {
+      case "add":
+        parentObj[attribute[attribute.length - 1]] += upgrade.value;
+        break;
+      case "multiply":
+        parentObj[attribute[attribute.length - 1]] *= upgrade.value;
+        break;
+      case "equals":
+        parentObj[attribute[attribute.length - 1]] = upgrade.value;
+        break;
+    }
+    console.log(playerConfig);
+    player.backupTiming = structuredClone(playerConfig.attack.timing);
+    player.attack.timing = structuredClone(playerConfig.attack.timing);
+    if (player.hearts > player.totalHearts) player.hearts = player.totalHearts;
+  }
+
+  function upgradeScreen(selectedUpgrades, selectUpgradeSlot) {
+    const canvas = document.getElementById("overlay");
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = "48px sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+    ctx.textAlign = "center";
+    ctx.fillText("UPGRADE UNLOCKED!", canvas.width / 2, 100);
+
+    ctx.font = "24px sans-serif";
+    ctx.fillText("choose one upgrade", canvas.width / 2, 200);
+
+    for (let i in selectedUpgrades) {
+      ctx.strokeStyle = "white";
+      ctx.strokeWidth = 2;
+      if (
+        mouseX > 50 &&
+        mouseX < canvas.width - 100 &&
+        mouseY > 250 + 72 * i &&
+        mouseY < 250 + 72 * i + 48
+      ) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+        ctx.fillRect(50, 250 + 72 * i, canvas.width - 100, 48);
+        ctx.fillText(
+          selectedUpgrades[i].text,
+          canvas.width / 2,
+          250 + 72 * i + 36,
+        );
+        if (mousePressed) {
+          selectUpgradeSlot.upgrade = selectedUpgrades[i];
+          return true;
+        }
+      } else {
+        ctx.strokeRect(50, 250 + 72 * i, canvas.width - 100, 48);
+        ctx.strokeText(
+          selectedUpgrades[i].text,
+          canvas.width / 2,
+          250 + 72 * i + 36,
+        );
+      }
     }
   }
-}
+
+  return [pickUpgrades, applyUpgrade, upgradeScreen];
+})();
